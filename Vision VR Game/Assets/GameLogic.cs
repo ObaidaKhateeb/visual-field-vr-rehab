@@ -13,6 +13,11 @@ public class GameLogic : MonoBehaviour
     public float betweenShapesDuration = 1500f; //Duration between showing sets
     public Transform focusPoint;
 
+    // sounds-related variables
+    public AudioClip correctSound;
+    public AudioClip incorrectSound;
+    private AudioSource audioSource;
+
     private GameObject leftShape, rightShape;
     private bool shapesAreSimilar;
     private bool inputAccepted;
@@ -26,13 +31,23 @@ public class GameLogic : MonoBehaviour
     {
         LoadSettings();
         StartCoroutine(RunTrials());
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
         if (inputAccepted && Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log(shapesAreSimilar ? "Correct (Shapes are similar)" : "Incorrect (Shapes are different)");
+            if (shapesAreSimilar)
+            {
+                Debug.Log("Correct (Shapes are similar)");
+                audioSource.PlayOneShot(correctSound);
+            }
+            else
+            {
+                Debug.Log("Incorrect (Shapes are different)");
+                audioSource.PlayOneShot(incorrectSound);
+            }
             inputAccepted = false;
         }
     }
@@ -163,9 +178,15 @@ public class GameLogic : MonoBehaviour
             if (!responded)
             {
                 if (!shapesAreSimilar)
+                {
                     Debug.Log("Correct (Shapes are different)");
+                    audioSource.PlayOneShot(correctSound);
+                }
                 else
+                {
                     Debug.Log("Incorrect (Shapes are similar)");
+                    audioSource.PlayOneShot(incorrectSound);
+                }
             }
 
             //Clean up
