@@ -15,6 +15,9 @@ public class CalibrationUI : MonoBehaviour
    public Dropdown focusChangeDropdown; // Focus point changability (0 = Static, 1 = Fixed interval change, 2 = Random interval change)
    public Dropdown intervalSetsDropdown; // Number of sets for focus point fixed interval change
 
+   public Dropdown successDropdown; // Number of sets should answered True to count as success
+   public Dropdown failDropdown; // Number of sets should answered False to count as failure
+
    public Button startButton; // Start button, save settings
 
    public GameObject uiPanel;
@@ -44,6 +47,10 @@ public class CalibrationUI : MonoBehaviour
         settings.focusChangeMode = focusChangeDropdown.value;
         settings.intervalSets = intervalSetsDropdown.value + 1;
 
+        // Success and Fail definitions
+        settings.successSets = successDropdown.value + 1;
+        settings.failureSets = failDropdown.value + 1;
+
         // Saving the settings
        string json = JsonUtility.ToJson(settings, true);
        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
@@ -69,4 +76,6 @@ public class VRSettings
    public float betweenShapesDuration;
    public int focusChangeMode; 
    public int intervalSets;
+   public int successSets;
+   public int failureSets;
 }

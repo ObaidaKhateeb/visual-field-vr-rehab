@@ -27,6 +27,12 @@ public class GameLogic : MonoBehaviour
     private int setsUntilChange;
     private bool waitingForFocusChange = false;
 
+    private int successSets; // Number of sets should answered True to count as success
+    private int failureSets; // Number of sets should answered False to count as failure
+    private int consecutiveCorrect = 0; 
+    private int consecutiveIncorrect = 0;
+    private float currentDistanceFromCenter = 1f; //Current distance from center (1-5)
+
     void Start()
     {
         LoadSettings();
@@ -42,11 +48,17 @@ public class GameLogic : MonoBehaviour
             {
                 Debug.Log("Correct (Shapes are similar)");
                 audioSource.PlayOneShot(correctSound);
+                consecutiveCorrect++;
+                consecutiveIncorrect = 0;
+                CheckDistanceFromCenterIncr();
             }
             else
             {
                 Debug.Log("Incorrect (Shapes are different)");
                 audioSource.PlayOneShot(incorrectSound);
+                consecutiveIncorrect++;
+                consecutiveCorrect = 0;
+                CheckDistanceFromCenterDecr();
             }
             inputAccepted = false;
         }
@@ -64,6 +76,10 @@ public class GameLogic : MonoBehaviour
             gameDuration = settings.gameDuration;
             shapeDisplayDuration = settings.shapeDisplayDuration;
             betweenShapesDuration = settings.betweenShapesDuration;
+
+            //Success and Fail definitions
+            successSets = settings.successSets;
+            failureSets = settings.failureSets;
             
             //Focus point settings: location, size, shape, and change mode.
             ApplyFocusSettings(settings);
@@ -181,11 +197,17 @@ public class GameLogic : MonoBehaviour
                 {
                     Debug.Log("Correct (Shapes are different)");
                     audioSource.PlayOneShot(correctSound);
+                    consecutiveCorrect++;
+                    consecutiveIncorrect = 0;
+                    CheckDistanceFromCenterIncr();
                 }
                 else
                 {
                     Debug.Log("Incorrect (Shapes are similar)");
                     audioSource.PlayOneShot(incorrectSound);
+                    consecutiveIncorrect++;
+                    consecutiveCorrect = 0;
+                    CheckDistanceFromCenterDecr();
                 }
             }
 
@@ -220,8 +242,8 @@ public class GameLogic : MonoBehaviour
 
         //Position relative to focus point
         Vector3 center = focusPoint.position + focusPoint.forward * shapeDistance;
-        Vector3 rightPos = center + focusPoint.right * 5 * sideOffset;
-        Vector3 leftPos = center - focusPoint.right * 5 * sideOffset;
+        Vector3 rightPos = center + focusPoint.right * currentDistanceFromCenter * sideOffset;
+        Vector3 leftPos = center - focusPoint.right * currentDistanceFromCenter * sideOffset;
 
 
         // Choose right shape
@@ -243,6 +265,26 @@ public class GameLogic : MonoBehaviour
         leftShape.transform.LookAt(cam);
     }
 
+    void CheckDistanceFromCenterIncr()
+    {
+        if (consecutiveCorrect >= successSets && currentDistanceFromCenter < 5f)
+        {
+            currentDistanceFromCenter = Mathf.Min(5f, currentDistanceFromCenter + 1f);
+            consecutiveCorrect = 0;
+            Debug.Log("Difficulty increased. New multiplier: " + currentDistanceFromCenter);
+        }
+    }
+
+    void CheckDistanceFromCenterDecr()
+    {
+        if (consecutiveIncorrect >= failureSets && currentDistanceFromCenter > 1f)
+        {
+            currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
+            consecutiveIncorrect = 0;
+            Debug.Log("Difficulty decreased. New multiplier: " + currentDistanceFromCenter);
+        }
+    }
+
     [System.Serializable]
     public class VRSettings
     {
@@ -254,5 +296,7 @@ public class GameLogic : MonoBehaviour
         public float betweenShapesDuration;
         public int focusChangeMode;
         public int intervalSets;
+        public int successSets;
+        public int failureSets;
     }
 }
