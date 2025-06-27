@@ -33,6 +33,7 @@ public class GameLogic : MonoBehaviour
     private int consecutiveCorrect = 0; 
     private int consecutiveIncorrect = 0;
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-5)
+    private float shapeScale = 0.05f; // Scale of the shapes
 
     void Start()
     {
@@ -78,6 +79,7 @@ public class GameLogic : MonoBehaviour
             shapeDisplayDuration = settings.shapeDisplayDuration;
             betweenShapesDuration = settings.betweenShapesDuration;
             currentDistanceFromCenter = settings.startingDistance;
+            shapeScale = settings.shapeScale;
 
             //Success and Fail definitions
             successSets = settings.successSets;
@@ -262,6 +264,10 @@ public class GameLogic : MonoBehaviour
         rightShape = Instantiate(right, rightPos, Quaternion.identity);
         leftShape = Instantiate(left, leftPos, Quaternion.identity);
 
+        // Apply scale to shapes
+        rightShape.transform.localScale = Vector3.one * shapeScale;
+        leftShape.transform.localScale = Vector3.one * shapeScale;
+
         // Optional: make shapes face user
         rightShape.transform.LookAt(cam);
         leftShape.transform.LookAt(cam);
@@ -299,6 +305,7 @@ public class GameLogic : MonoBehaviour
         public int focusChangeMode;
         public int intervalSets;
         public float startingDistance = 1f;
+        public float shapeScale = 0.05f;
         public int successSets;
         public int failureSets;
     }
