@@ -14,6 +14,9 @@ public class CalibrationUI : MonoBehaviour
    public Dropdown focusShapeDropdown; //Focus Point Shape (0 = Circle, 1 = Cross)
    public Dropdown focusChangeDropdown; // Focus point changability (0 = Static, 1 = Fixed interval change, 2 = Random interval change)
    public Dropdown intervalSetsDropdown; // Number of sets for focus point fixed interval change
+//    public Dropdown focuscolorChangeDropdown; // Color change on/off
+//    public Dropdown focuscolorChoiceDropdown; // Which color to change to
+//    public Dropdown focuscolorDurationDropdown; // Duration of change in seconds
 
    public Dropdown successDropdown; // Number of sets should answered True to count as success
    public Dropdown failDropdown; // Number of sets should answered False to count as failure
@@ -26,6 +29,9 @@ public class CalibrationUI : MonoBehaviour
     {
         startButton.onClick.AddListener(SaveSettingsAndClose);
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
+        OnFocusChangeDropdownChanged();
+        // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
+        // OnFocusColorChangeDropdownChanged();
     }
 
    void SaveSettingsAndClose()
@@ -46,6 +52,9 @@ public class CalibrationUI : MonoBehaviour
        settings.focusShape = focusShapeDropdown.value;
         settings.focusChangeMode = focusChangeDropdown.value;
         settings.intervalSets = intervalSetsDropdown.value + 1;
+        // settings.focuscolorChangeDropdown = focuscolorChangeDropdown.value == 1;
+        // settings.focuscolorChoiceDropdown = focuscolorChoiceDropdown.value;
+        // settings.focuscolorDurationDropdown = focuscolorDurationDropdown.value + 1;
 
         // Success and Fail definitions
         settings.successSets = successDropdown.value + 1;
@@ -61,8 +70,14 @@ public class CalibrationUI : MonoBehaviour
 
     public void OnFocusChangeDropdownChanged()
     {
-        intervalSetsDropdown.gameObject.SetActive(focusChangeDropdown.value == 1);
+        intervalSetsDropdown.interactable = focusChangeDropdown.value == 1;
     }
+
+    // public void OnFocusColorChangeDropdownChanged()
+    // {
+    //     focuscolorChoiceDropdown.interactable = focuscolorChangeDropdown.value == 1;
+    //     focuscolorDurationDropdown.interactable = focuscolorChangeDropdown.value == 1;
+    // }
 }
 
 [System.Serializable]
@@ -78,4 +93,7 @@ public class VRSettings
    public int intervalSets;
    public int successSets;
    public int failureSets;
+    // public bool focuscolorChangeDropdown;
+    // public int focuscolorChoiceDropdown;
+    // public int focuscolorDurationDropdown;
 }

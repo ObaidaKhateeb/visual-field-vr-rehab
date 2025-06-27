@@ -26,6 +26,7 @@ public class GameLogic : MonoBehaviour
     private int intervalSets;
     private int setsUntilChange;
     private bool waitingForFocusChange = false;
+    
 
     private int successSets; // Number of sets should answered True to count as success
     private int failureSets; // Number of sets should answered False to count as failure
