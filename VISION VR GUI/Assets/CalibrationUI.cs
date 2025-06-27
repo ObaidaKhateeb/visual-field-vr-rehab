@@ -8,6 +8,7 @@ public class CalibrationUI : MonoBehaviour
    public InputField timeInput; //Duration of the game in minutes
    public InputField shapeDisplayDuration; //Duration of showing the shapes in seconds
    public InputField betweenShapesDuration; //Duration between sets in seconds 
+   public Slider startingDistanceSlider; // starting distance of the shape from the focus point
 
    public Slider focusYSlider; // Focus Point position in Y-axis
    public Slider focusScaleSlider; // Focus Point size 
@@ -45,6 +46,9 @@ public class CalibrationUI : MonoBehaviour
            settings.betweenShapesDuration = betweenDuration;
        if (float.TryParse(shapeDisplayDuration.text, out float duration))
            settings.shapeDisplayDuration = duration; 
+        
+        settings.startingDistance = startingDistanceSlider.value;
+
 
         //Focus point settings: location, size, shape, and change mode.
        settings.focusY = focusYSlider.value / 100f;
@@ -91,6 +95,7 @@ public class VRSettings
    public float betweenShapesDuration;
    public int focusChangeMode; 
    public int intervalSets;
+   public float startingDistance = 1f;
    public int successSets;
    public int failureSets;
     // public bool focuscolorChangeDropdown;

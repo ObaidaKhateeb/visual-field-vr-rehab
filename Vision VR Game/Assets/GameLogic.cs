@@ -77,6 +77,7 @@ public class GameLogic : MonoBehaviour
             gameDuration = settings.gameDuration;
             shapeDisplayDuration = settings.shapeDisplayDuration;
             betweenShapesDuration = settings.betweenShapesDuration;
+            currentDistanceFromCenter = settings.startingDistance;
 
             //Success and Fail definitions
             successSets = settings.successSets;
@@ -297,6 +298,7 @@ public class GameLogic : MonoBehaviour
         public float betweenShapesDuration;
         public int focusChangeMode;
         public int intervalSets;
+        public float startingDistance = 1f;
         public int successSets;
         public int failureSets;
     }
