@@ -656,14 +656,7 @@ MonoBehaviour:
   - {fileID: 1412202381071052590, guid: ec0f9266873c446f6a8118142c2ab639, type: 3}
   - {fileID: 5516796391777566125, guid: 1ad6fd69a5cab4b9193bb8f55dcb5861, type: 3}
   - {fileID: 8235760462509151719, guid: 38bdf77ce03b54971b0676839f511296, type: 3}
-  shapePrefabs:
-  - {fileID: 3390977460452408080, guid: 7f6bf1cd9fd974258915a02b3f2df571, type: 3}
-  - {fileID: 8849555672406115654, guid: 54f30d0476617445eb8052e711833a95, type: 3}
-  - {fileID: 2158194882488219502, guid: 5a83da1eee4d64a66b1edf4da25e1ed9, type: 3}
-  - {fileID: 6591302170348903226, guid: a57c9928f5ec849e1ba3986a5da96f41, type: 3}
-  - {fileID: 4698934358058231707, guid: 36f03168b1304479dbd98c8804ddfb9f, type: 3}
-  - {fileID: 7988952349942948577, guid: 012ddffe2d8bd4c07ba764fdbfee5db4, type: 3}
-  - {fileID: 4344574023457011536, guid: 9c1094465388e490babbf677d9620c5f, type: 3}
+  shapePrefabs: []
   shapeDistance: 2
   sideOffset: 0.5
   gameDuration: 10
