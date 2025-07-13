@@ -23,6 +23,8 @@ public class CalibrationUI : MonoBehaviour
    public Dropdown successDropdown; // Number of sets should answered True to count as success
    public Dropdown failDropdown; // Number of sets should answered False to count as failure
 
+   public Dropdown imageSetDropdown; // Dropdown for image set selection
+
    public Button startButton; // Start button, save settings
 
    public GameObject uiPanel;
@@ -66,6 +68,9 @@ public class CalibrationUI : MonoBehaviour
         settings.successSets = successDropdown.value + 1;
         settings.failureSets = failDropdown.value + 1;
 
+        // Image set selection
+        settings.imageSet = imageSetDropdown.value + 1;
+
         // Saving the settings
        string json = JsonUtility.ToJson(settings, true);
        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
@@ -101,6 +106,7 @@ public class VRSettings
    public float shapeScale = 0.05f;
    public int successSets;
    public int failureSets;
+   public int imageSet;
     // public bool focuscolorChangeDropdown;
     // public int focuscolorChoiceDropdown;
     // public int focuscolorDurationDropdown;

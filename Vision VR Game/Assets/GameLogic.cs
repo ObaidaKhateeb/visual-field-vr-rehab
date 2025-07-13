@@ -5,7 +5,19 @@ using System.IO;
 
 public class GameLogic : MonoBehaviour
 {
-    public List<GameObject> shapePrefabs;  //Shapes
+    //image sets
+    public List<GameObject> imageSet1 = new List<GameObject>();
+    public List<GameObject> imageSet2 = new List<GameObject>();
+    public List<GameObject> imageSet3 = new List<GameObject>();
+    public List<GameObject> imageSet4 = new List<GameObject>();
+    public List<GameObject> imageSet5 = new List<GameObject>();
+    public List<GameObject> imageSet6 = new List<GameObject>();
+    public List<GameObject> imageSet7 = new List<GameObject>();
+    public List<GameObject> imageSet8 = new List<GameObject>();
+    public List<GameObject> imageSet9 = new List<GameObject>();
+    public List<GameObject> imageSet10 = new List<GameObject>();
+    public List<GameObject> shapePrefabs; //will be set to the chosen set
+
     public float shapeDistance = 2f; //Distance from camera
     public float sideOffset = 0.5f;  // Left/right separation
     public float gameDuration = 10f;   //number of rounds
@@ -87,12 +99,34 @@ public class GameLogic : MonoBehaviour
             
             //Focus point settings: location, size, shape, and change mode.
             ApplyFocusSettings(settings);
+            SetActiveImageSet(settings.imageSet);
             
             Debug.Log("Settings loaded successfully");
         }
         else
         {
             Debug.Log("No settings file found, using defaults");
+        }
+    }
+
+    //a function responsible for settings the chosen set of images 
+    void SetActiveImageSet(int setNumber)
+    {
+        switch(setNumber)
+        {
+            case 1: shapePrefabs = imageSet1; break;
+            case 2: shapePrefabs = imageSet2; break;
+            case 3: shapePrefabs = imageSet3; break;
+            case 4: shapePrefabs = imageSet4; break;
+            case 5: shapePrefabs = imageSet5; break;
+            case 6: shapePrefabs = imageSet6; break;
+            case 7: shapePrefabs = imageSet7; break;
+            case 8: shapePrefabs = imageSet8; break;
+            case 9: shapePrefabs = imageSet9; break;
+            case 10: shapePrefabs = imageSet10; break;
+            default: 
+                shapePrefabs = imageSet1; 
+                break;
         }
     }
 
@@ -308,5 +342,6 @@ public class GameLogic : MonoBehaviour
         public float shapeScale = 0.05f;
         public int successSets;
         public int failureSets;
+        public int imageSet = 1;
     }
 }
