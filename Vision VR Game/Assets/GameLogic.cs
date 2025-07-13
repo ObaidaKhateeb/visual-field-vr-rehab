@@ -47,6 +47,14 @@ public class GameLogic : MonoBehaviour
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-5)
     private float shapeScale = 0.05f; // Scale of the shapes
 
+
+    private int totalSimilarPairs = 0;
+    private int totalNonSimilarPairs = 0;
+    private int correctResponses = 0;
+    private int incorrectResponses = 0;
+    private float totalResponseTime = 0f;
+    private int responseCount = 0;
+
     void Start()
     {
         LoadSettings();
@@ -221,6 +229,11 @@ public class GameLogic : MonoBehaviour
                 if (!inputAccepted)
                 {
                     responded = true;
+                    if (shapesAreSimilar)
+                    {
+                        totalResponseTime += timer;
+                        responseCount++;
+                    }
                     break;  // User pressed SPACE
                 }
 
@@ -238,6 +251,7 @@ public class GameLogic : MonoBehaviour
                     consecutiveCorrect++;
                     consecutiveIncorrect = 0;
                     CheckDistanceFromCenterIncr();
+                    correctResponses++;
                 }
                 else
                 {
@@ -246,6 +260,7 @@ public class GameLogic : MonoBehaviour
                     consecutiveIncorrect++;
                     consecutiveCorrect = 0;
                     CheckDistanceFromCenterDecr();
+                    incorrectResponses++;
                 }
             }
 
@@ -258,6 +273,7 @@ public class GameLogic : MonoBehaviour
 
             elapsedTime += Time.time - roundStartTime; //update elapsed time
         }
+        LogGameStatistics();
     }
 
     // Coroutine to hide shapes after a delay
@@ -302,9 +318,14 @@ public class GameLogic : MonoBehaviour
         rightShape.transform.localScale = Vector3.one * shapeScale;
         leftShape.transform.localScale = Vector3.one * shapeScale;
 
-        // Optional: make shapes face user
+        //make shapes face user
         rightShape.transform.LookAt(cam);
         leftShape.transform.LookAt(cam);
+
+        if (shapesAreSimilar) 
+            totalSimilarPairs++;
+        else 
+            totalNonSimilarPairs++;
     }
 
     void CheckDistanceFromCenterIncr()
@@ -325,6 +346,17 @@ public class GameLogic : MonoBehaviour
             consecutiveIncorrect = 0;
             Debug.Log("Difficulty decreased. New multiplier: " + currentDistanceFromCenter);
         }
+    }
+
+    void LogGameStatistics()
+    {
+        float successRate = totalSimilarPairs > 0 ? (float)correctResponses / totalSimilarPairs * 100f : 0f;
+        
+        Debug.Log("=== RESULTS ===");
+        Debug.Log("Success Rate: " + successRate.ToString("F1") + "% (" + correctResponses + "/" + totalSimilarPairs + ")");
+        float failRate = totalNonSimilarPairs > 0 ? (float)incorrectResponses / totalNonSimilarPairs * 100f : 0f;
+        Debug.Log("Fail Rate: " + failRate.ToString("F1") + "% (" + incorrectResponses + "/" + totalNonSimilarPairs + ")");
+        Debug.Log("Average Response Time: " + (responseCount > 0 ? (totalResponseTime / responseCount).ToString("F2") : "0") + " seconds");
     }
 
     [System.Serializable]
