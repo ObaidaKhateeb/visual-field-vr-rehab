@@ -462,7 +462,11 @@ public class GameLogic : MonoBehaviour
         else
         {
             // Pick a different shape from the SAME set
-            int leftIndex = Random.Range(0, chosenSet.Count);
+            int leftIndex;
+            do
+            {
+                leftIndex = Random.Range(0, chosenSet.Count);
+            } while (leftIndex == rightIndex && chosenSet.Count > 1);
             left = chosenSet[leftIndex];
         }
 
