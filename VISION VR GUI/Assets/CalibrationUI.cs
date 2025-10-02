@@ -45,6 +45,11 @@ public class CalibrationUI : MonoBehaviour
    public GameObject configButtonPrefab; // a button prefab
    private string selectedConfigToLoad = "";
 
+   //Message dialog
+   public GameObject MessageDialogPanel;
+   public Text MessageText;
+   public Button MessageOkButton;
+
    public GameObject uiPanel;
 
     void Start()
@@ -59,6 +64,9 @@ public class CalibrationUI : MonoBehaviour
         loadDialogDeleteButton.onClick.AddListener(DeleteSelectedConfiguration);
         loadDialogLoadButton.onClick.AddListener(LoadSelectedConfiguration);
         loadDialogCancelButton.onClick.AddListener(HideLoadDialog);
+
+        //Message dialog
+        MessageOkButton.onClick.AddListener(() => MessageDialogPanel.SetActive(false));
 
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
         OnFocusChangeDropdownChanged();
@@ -86,7 +94,7 @@ public class CalibrationUI : MonoBehaviour
         
         if (string.IsNullOrEmpty(configName))
         {
-            Debug.LogWarning("Please enter a configuration name");
+            showMessage(".תורדגהה טסל םש רוחבל אנ");
             return;
         }
         
@@ -144,7 +152,7 @@ public class CalibrationUI : MonoBehaviour
         string path = Path.Combine(configFolder, filename);
         File.WriteAllText(path, json);
         
-        Debug.Log("Configuration saved to: " + path);
+        showMessage(".הלחצהב רמשנ תורדגהה טס");
         HideSaveDialog();
     }
 
@@ -161,7 +169,7 @@ public class CalibrationUI : MonoBehaviour
         
         if (!Directory.Exists(configFolder))
         {
-            Debug.Log("No configurations folder found");
+            showMessage(".הרתוא אל תורדגהה תייקית");
             return;
         }
         
@@ -221,6 +229,10 @@ public class CalibrationUI : MonoBehaviour
                 {
                     // When unchecked, return to gray
                     bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+                    if (selectedConfigToLoad == capturedName)
+                    {
+                        selectedConfigToLoad = "";
+                    }
                 }
             });
             
@@ -234,7 +246,6 @@ public class CalibrationUI : MonoBehaviour
     void SelectConfig(string configName)
     {
         selectedConfigToLoad = configName;
-        Debug.Log("Configuration Selected: " + configName);
         
         // Highlight selected and unhighlight others
         foreach (Transform child in loadDialogContent)
@@ -269,7 +280,7 @@ public class CalibrationUI : MonoBehaviour
     {
         if (string.IsNullOrEmpty(selectedConfigToLoad))
         {
-            Debug.LogWarning("Please select a configuration to load");
+            showMessage(".הניעטל תורדגה טס רוחבל אנ");
             return;
         }
         
@@ -315,12 +326,12 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            Debug.Log("Configuration loaded: " + selectedConfigToLoad);
+            showMessage(".ןעטנ תורדגהה טס");
             HideLoadDialog();
         }
         else
         {
-            Debug.LogWarning("Configuration file not found: " + path);
+            showMessage(".אצמנ אל תורדגהה ץבוק");
         }
     }
 
@@ -328,7 +339,7 @@ public class CalibrationUI : MonoBehaviour
     {
         if (string.IsNullOrEmpty(selectedConfigToLoad))
         {
-            Debug.LogWarning("Please select a configuration to delete");
+            showMessage(".הקיחמל תורדגה טס רוחבל אנ");
             return;
         }
         
@@ -339,7 +350,7 @@ public class CalibrationUI : MonoBehaviour
         {
             // Delete from disk
             File.Delete(path);
-            Debug.Log("Configuration deleted: " + selectedConfigToLoad);
+            showMessage(".קחמנ תורדגהה טס");
             
             // Remove from GUI immediately
             foreach (Transform child in loadDialogContent)
@@ -368,7 +379,7 @@ public class CalibrationUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Configuration file not found: " + path);
+            showMessage(".אצמנ אל תורדגהה ץבוק");
         }
     }
 
@@ -439,6 +450,12 @@ public class CalibrationUI : MonoBehaviour
     //     focuscolorChoiceDropdown.interactable = focuscolorChangeDropdown.value == 1;
     //     focuscolorDurationDropdown.interactable = focuscolorChangeDropdown.value == 1;
     // }
+
+    void showMessage(string message)
+    {
+        MessageText.text = message;
+        MessageDialogPanel.SetActive(true);
+    }
 }
 
 [System.Serializable]
