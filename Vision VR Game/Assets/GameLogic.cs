@@ -20,7 +20,7 @@ public class GameLogic : MonoBehaviour
     private List<List<GameObject>> activeImageSets = new List<List<GameObject>>();
 
     public float shapeDistance = 2f; //Distance from camera
-    public float sideOffset = 0.5f;  // Left/right separation
+    public float sideOffset = 0.35f;  // Left/right separation
     public float gameDuration = 10f;   //number of rounds
     public float shapeDisplayDuration = 1500f; //Duration of showing shapes
     public float betweenShapesDuration = 1500f; //Duration between showing sets
@@ -46,8 +46,9 @@ public class GameLogic : MonoBehaviour
     private int chunkSize = 15; // Chunk size
     private int currentChunkCorrect = 0;
     private int currentChunkTotal = 0;
-    private float currentDistanceFromCenter = 1f; //Current distance from center (1-5)
+    private float currentDistanceFromCenter = 1f; //Current distance from center (1-10)
     private float shapeScale = 0.05f; // Scale of the shapes
+    private bool nextProgressionIsSize = true;
 
 
     private int totalSimilarPairs = 0;
@@ -464,19 +465,101 @@ public class GameLogic : MonoBehaviour
         
         Debug.Log("Chunk completed. Accuracy: " + accuracy.ToString("F1") + "% (" + currentChunkCorrect + "/" + currentChunkTotal + ")");
         
-        if (accuracy >= successRate && currentDistanceFromCenter < 10f)
+        if (accuracy >= successRate)
         {
-            currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
-            Debug.Log("Level UP! New distance: " + currentDistanceFromCenter);
+            // Level UP - alternate between size and distance
+            if (nextProgressionIsSize)
+            {
+                // Try to decrease size (make shapes smaller/harder)
+                if (shapeScale > 0.005f) // Minimum size check (1 * 0.005f)
+                {
+                    shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
+                    Debug.Log("Level UP! Shape size decreased to: " + (shapeScale / 0.005f));
+                    nextProgressionIsSize = false; // Next time change distance
+                }
+                else if (currentDistanceFromCenter < 10f)
+                {
+                    // Size at minimum, try distance instead
+                    currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
+                    Debug.Log("Level UP! Size at minimum, distance increased to: " + currentDistanceFromCenter);
+                    nextProgressionIsSize = false; // Next time still try size first
+                }
+                else
+                {
+                    Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
+                }
+            }
+            else
+            {
+                // Try to increase distance
+                if (currentDistanceFromCenter < 10f)
+                {
+                    currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
+                    Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
+                    nextProgressionIsSize = true; // Next time change size
+                }
+                else if (shapeScale > 0.005f)
+                {
+                    // Distance at maximum, try size instead
+                    shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
+                    Debug.Log("Level UP! Distance at maximum, size decreased to: " + (shapeScale / 0.005f));
+                    nextProgressionIsSize = true; // Next time still try distance first
+                }
+                else
+                {
+                    Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
+                }
+            }
         }
-        else if (accuracy <= failRate && currentDistanceFromCenter > 1f)
+        else if (accuracy <= failRate)
         {
-            currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
-            Debug.Log("Level DOWN! New distance: " + currentDistanceFromCenter);
+            // Level DOWN - alternate between size and distance (opposite direction)
+            if (nextProgressionIsSize)
+            {
+                // Try to increase size (make shapes bigger/easier)
+                if (shapeScale < 0.05f) // Maximum size check (10 * 0.005f)
+                {
+                    shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
+                    Debug.Log("Level DOWN! Shape size increased to: " + (shapeScale / 0.005f));
+                    nextProgressionIsSize = false; // Next time change distance
+                }
+                else if (currentDistanceFromCenter > 1f)
+                {
+                    // Size at maximum, try distance instead
+                    currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
+                    Debug.Log("Level DOWN! Size at maximum, distance decreased to: " + currentDistanceFromCenter);
+                    nextProgressionIsSize = false; // Next time still try size first
+                }
+                else
+                {
+                    Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
+                }
+            }
+            else
+            {
+                // Try to decrease distance
+                if (currentDistanceFromCenter > 1f)
+                {
+                    currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
+                    Debug.Log("Level DOWN! Distance decreased to: " + currentDistanceFromCenter);
+                    nextProgressionIsSize = true; // Next time change size
+                }
+                else if (shapeScale < 0.05f)
+                {
+                    // Distance at minimum, try size instead
+                    shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
+                    Debug.Log("Level DOWN! Distance at minimum, size increased to: " + (shapeScale / 0.005f));
+                    nextProgressionIsSize = true; // Next time still try distance first
+                }
+                else
+                {
+                    Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
+                }
+            }
         }
         else
         {
-            Debug.Log("Level maintained at: " + currentDistanceFromCenter);
+            Debug.Log("Level maintained. Current: distance=" + currentDistanceFromCenter + ", size=" + (shapeScale / 0.005f));
         }
     }
 
