@@ -40,6 +40,7 @@ public class CalibrationUI : MonoBehaviour
    public GameObject loadDialogPanel;
    public Transform loadDialogContent; // The Content of the ScrollView
    public Button loadDialogLoadButton;
+   public Button loadDialogDeleteButton;
    public Button loadDialogCancelButton;
    public GameObject configButtonPrefab; // a button prefab
    private string selectedConfigToLoad = "";
@@ -55,6 +56,7 @@ public class CalibrationUI : MonoBehaviour
         //save and load dialogs buttons
         saveDialogSaveButton.onClick.AddListener(SaveConfigurationWithName);
         saveDialogCancelButton.onClick.AddListener(HideSaveDialog);
+        loadDialogDeleteButton.onClick.AddListener(DeleteSelectedConfiguration);
         loadDialogLoadButton.onClick.AddListener(LoadSelectedConfiguration);
         loadDialogCancelButton.onClick.AddListener(HideLoadDialog);
 
@@ -315,6 +317,42 @@ public class CalibrationUI : MonoBehaviour
             
             Debug.Log("Configuration loaded: " + selectedConfigToLoad);
             HideLoadDialog();
+        }
+        else
+        {
+            Debug.LogWarning("Configuration file not found: " + path);
+        }
+    }
+
+    void DeleteSelectedConfiguration()
+    {
+        if (string.IsNullOrEmpty(selectedConfigToLoad))
+        {
+            Debug.LogWarning("Please select a configuration to delete");
+            return;
+        }
+        
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
+        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
+        
+        if (File.Exists(path))
+        {
+            // Delete from disk
+            File.Delete(path);
+            Debug.Log("Configuration deleted: " + selectedConfigToLoad);
+            
+            // Remove from GUI
+            foreach (Transform child in loadDialogContent)
+            {
+                if (child.name == selectedConfigToLoad)
+                {
+                    Destroy(child.gameObject);
+                    break;
+                }
+            }
+            
+            // Clear selection
+            selectedConfigToLoad = "";
         }
         else
         {
