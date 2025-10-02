@@ -228,7 +228,7 @@ public class GameLogic : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         float elapsedTime = 0f;
-        while (elapsedTime < gameDuration)
+        while (elapsedTime < gameDuration || currentChunkTotal > 0)
         {
             float roundStartTime = Time.time; //round start time 
             
