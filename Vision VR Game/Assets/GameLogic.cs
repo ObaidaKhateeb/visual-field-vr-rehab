@@ -20,7 +20,7 @@ public class GameLogic : MonoBehaviour
     private List<List<GameObject>> activeImageSets = new List<List<GameObject>>();
 
     public float shapeDistance = 2f; //Distance from camera
-    public float sideOffset = 0.35f;  // Left/right separation
+    public float sideOffset = 0.28f;  // Left/right separation
     public float gameDuration = 10f;   //number of rounds
     public float shapeDisplayDuration = 1500f; //Duration of showing shapes
     public float betweenShapesDuration = 1500f; //Duration between showing sets
@@ -413,8 +413,8 @@ public class GameLogic : MonoBehaviour
 
         //Position relative to focus point
         Vector3 center = focusPoint.position + focusPoint.forward * shapeDistance;
-        Vector3 rightPos = center + focusPoint.right * currentDistanceFromCenter * sideOffset;
-        Vector3 leftPos = center - focusPoint.right * currentDistanceFromCenter * sideOffset;
+        Vector3 rightPos = center + focusPoint.right * (0.7f + currentDistanceFromCenter * sideOffset);
+        Vector3 leftPos = center - focusPoint.right * (0.7f + currentDistanceFromCenter * sideOffset);
 
         // Choose a random image set from the active sets
         int setIndex = Random.Range(0, activeImageSets.Count);
