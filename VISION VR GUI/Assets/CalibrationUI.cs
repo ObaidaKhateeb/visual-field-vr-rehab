@@ -10,10 +10,14 @@ public class CalibrationUI : MonoBehaviour
    public InputField shapeDisplayDuration; //Duration of showing the shapes in seconds
    public InputField betweenShapesDuration; //Duration between sets in seconds 
    public Slider startingDistanceSlider; // starting distance of the shape from the focus point
+   public Text startingDistanceValueText; // Display value of startingDistanceSlider
    public Slider shapeSizeSlider; // Size of the shapes
+   public Text shapeSizeValueText; // Display value of shapeSizeSlider
 
    public Slider focusYSlider; // Focus Point position in Y-axis
+   public Text focusYValueText; // Display value of focusYSlider
    public Slider focusScaleSlider; // Focus Point size 
+   public Text focusScaleValueText; // Display value of focusScaleSlider
    public Dropdown focusShapeDropdown; //Focus Point Shape (0 = Circle, 1 = Cross)
    public Dropdown focusChangeDropdown; // Focus point changability (0 = Static, 1 = Fixed interval change, 2 = Random interval change)
    public Dropdown intervalSetsDropdown; // Number of sets for focus point fixed interval change
@@ -54,6 +58,13 @@ public class CalibrationUI : MonoBehaviour
 
     void Start()
     {
+        //sliders text values 
+        startingDistanceSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        shapeSizeSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        focusYSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        focusScaleSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        UpdateSliderValueDisplay(); //initial display
+
         saveConfigButton.onClick.AddListener(ShowSaveDialog);
         loadConfigButton.onClick.AddListener(ShowLoadDialog);
         startButton.onClick.AddListener(SaveSettingsAndClose);
@@ -72,6 +83,21 @@ public class CalibrationUI : MonoBehaviour
         OnFocusChangeDropdownChanged();
         // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
         // OnFocusColorChangeDropdownChanged();
+    }
+
+    void UpdateSliderValueDisplay()
+    {
+        if (startingDistanceValueText != null)
+            startingDistanceValueText.text = startingDistanceSlider.value.ToString();
+        
+        if (shapeSizeValueText != null)
+            shapeSizeValueText.text = shapeSizeSlider.value.ToString();
+            
+        if (focusYValueText != null)
+            focusYValueText.text = focusYSlider.value.ToString();
+
+        if (focusScaleValueText != null)
+            focusScaleValueText.text = focusScaleSlider.value.ToString();
     }
 
     //A function that shows the save configuration dialog
