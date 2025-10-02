@@ -77,8 +77,12 @@ public class CalibrationUI : MonoBehaviour
     //A function that shows the save configuration dialog
     void ShowSaveDialog()
     {
-        saveConfigNameInput.text = "";
+        saveConfigNameInput.text = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"); //cfg name by default is the date
         saveDialogPanel.SetActive(true);
+
+        //select all the text 
+        saveConfigNameInput.Select();
+        saveConfigNameInput.ActivateInputField();
     }
 
     //A function that hides the save configuration dialog
