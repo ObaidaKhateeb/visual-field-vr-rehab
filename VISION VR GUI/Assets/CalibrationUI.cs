@@ -32,21 +32,62 @@ public class CalibrationUI : MonoBehaviour
    public Button loadConfigButton; // Load configuration button
    public Button startButton; // Start button, save settings
 
+   //Save and load Dialogs
+   public GameObject saveDialogPanel;
+   public InputField saveConfigNameInput;
+   public Button saveDialogSaveButton;
+   public Button saveDialogCancelButton;
+   public GameObject loadDialogPanel;
+   public Transform loadDialogContent; // The Content of the ScrollView
+   public Button loadDialogLoadButton;
+   public Button loadDialogCancelButton;
+   public GameObject configButtonPrefab; // a button prefab
+   private string selectedConfigToLoad = "";
+
    public GameObject uiPanel;
 
     void Start()
     {
-        saveConfigButton.onClick.AddListener(SaveConfiguration);
-        loadConfigButton.onClick.AddListener(LoadConfiguration);
+        saveConfigButton.onClick.AddListener(ShowSaveDialog);
+        loadConfigButton.onClick.AddListener(ShowLoadDialog);
         startButton.onClick.AddListener(SaveSettingsAndClose);
+
+        //save and load dialogs buttons
+        saveDialogSaveButton.onClick.AddListener(SaveConfigurationWithName);
+        saveDialogCancelButton.onClick.AddListener(HideSaveDialog);
+        loadDialogLoadButton.onClick.AddListener(LoadSelectedConfiguration);
+        loadDialogCancelButton.onClick.AddListener(HideLoadDialog);
+
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
         OnFocusChangeDropdownChanged();
         // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
         // OnFocusColorChangeDropdownChanged();
     }
 
-    void SaveConfiguration()
+    //A function that shows the save configuration dialog
+    void ShowSaveDialog()
     {
+        saveConfigNameInput.text = "";
+        saveDialogPanel.SetActive(true);
+    }
+
+    //A function that hides the save configuration dialog
+    void HideSaveDialog()
+    {
+        saveDialogPanel.SetActive(false);
+    }
+
+    //A function responsible for saving the configuration
+    void SaveConfigurationWithName()
+    {
+        string configName = saveConfigNameInput.text.Trim();
+        
+        if (string.IsNullOrEmpty(configName))
+        {
+            Debug.LogWarning("Please enter a configuration name");
+            return;
+        }
+        
         VRSettings settings = new VRSettings();
         
         // Durations: game, set display, and between sets.
@@ -90,17 +131,148 @@ public class CalibrationUI : MonoBehaviour
                 settings.imageSets.Add(i + 1);
         }
 
-        // Save to a config file (different from the runtime vr_settings.json)
+        // Save to config folder
         string json = JsonUtility.ToJson(settings, true);
-        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_config.json");
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
+        
+        if (!Directory.Exists(configFolder))
+            Directory.CreateDirectory(configFolder);
+        
+        string filename = configName + ".json";
+        string path = Path.Combine(configFolder, filename);
         File.WriteAllText(path, json);
         
         Debug.Log("Configuration saved to: " + path);
+        HideSaveDialog();
     }
 
-    void LoadConfiguration()
+    //A function that shows the load dialog with the available configurations to load
+    void ShowLoadDialog()
     {
-        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_config.json");
+        // Clear previous buttons
+        foreach (Transform child in loadDialogContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
+        
+        if (!Directory.Exists(configFolder))
+        {
+            Debug.Log("No configurations folder found");
+            return;
+        }
+        
+        string[] configFiles = Directory.GetFiles(configFolder, "*.json");
+        
+        if (configFiles.Length == 0)
+        {
+            Debug.Log("No saved configurations found");
+            return;
+        }
+        
+        // Create a button for each config file
+        int index = 0;
+        foreach (string filePath in configFiles)
+        {
+            string configName = Path.GetFileNameWithoutExtension(filePath);
+            
+            GameObject toggleObj = new GameObject(configName);
+            toggleObj.transform.SetParent(loadDialogContent, false);
+            
+            RectTransform toggleRt = toggleObj.AddComponent<RectTransform>();
+            toggleRt.anchorMin = new Vector2(0, 1);
+            toggleRt.anchorMax = new Vector2(1, 1);
+            toggleRt.pivot = new Vector2(0.5f, 1);
+            toggleRt.sizeDelta = new Vector2(0, 30);
+            toggleRt.anchoredPosition = new Vector2(0, -index * 35);
+            
+            Toggle toggle = toggleObj.AddComponent<Toggle>();
+            
+            Image bgImage = toggleObj.AddComponent<Image>();
+            bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+            
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(toggleObj.transform, false);
+            
+            RectTransform labelRt = labelObj.AddComponent<RectTransform>();
+            labelRt.anchorMin = Vector2.zero;
+            labelRt.anchorMax = Vector2.one;
+            labelRt.sizeDelta = Vector2.zero;
+            labelRt.offsetMin = new Vector2(10, 0);
+            labelRt.offsetMax = new Vector2(-10, 0);
+            
+            Text label = labelObj.AddComponent<Text>();
+            label.text = configName;
+            label.color = Color.black;
+            label.fontSize = 16;
+            label.alignment = TextAnchor.MiddleLeft;
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            
+            string capturedName = configName;
+            toggle.onValueChanged.AddListener((isOn) => {
+                if (isOn) 
+                {
+                    SelectConfig(capturedName);
+                }
+                else
+                {
+                    // When unchecked, return to gray
+                    bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+                }
+            });
+            
+            index++;
+        }
+        
+        loadDialogPanel.SetActive(true);
+        selectedConfigToLoad = "";
+    }
+
+    void SelectConfig(string configName)
+    {
+        selectedConfigToLoad = configName;
+        Debug.Log("Configuration Selected: " + configName);
+        
+        // Highlight selected and unhighlight others
+        foreach (Transform child in loadDialogContent)
+        {
+            Toggle toggle = child.GetComponent<Toggle>();
+            Image bgImage = child.GetComponent<Image>();
+            
+            if (toggle != null && bgImage != null)
+            {
+                if (child.name == configName)
+                {
+                    // Highlight selected
+                    bgImage.color = new Color(0.3f, 0.6f, 1f, 1f); // Blue highlight
+                    toggle.isOn = true;
+                }
+                else
+                {
+                    // Unhighlight others
+                    bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f); // Gray
+                    toggle.isOn = false;
+                }
+            }
+        }
+    }
+
+    void HideLoadDialog()
+    {
+        loadDialogPanel.SetActive(false);
+    }
+
+    void LoadSelectedConfiguration()
+    {
+        if (string.IsNullOrEmpty(selectedConfigToLoad))
+        {
+            Debug.LogWarning("Please select a configuration to load");
+            return;
+        }
+        
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
+        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
         
         if (File.Exists(path))
         {
@@ -129,12 +301,10 @@ public class CalibrationUI : MonoBehaviour
             chunkSizeInput.text = settings.chunkSize.ToString();
             
             // Load image sets toggles
-            // First, uncheck all toggles
             for (int i = 0; i < imageSetToggles.Count; i++)
             {
                 imageSetToggles[i].isOn = false;
             }
-            // Then check the saved ones
             foreach (int setNumber in settings.imageSets)
             {
                 if (setNumber >= 1 && setNumber <= imageSetToggles.Count)
@@ -143,11 +313,12 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            Debug.Log("Configuration loaded from: " + path);
+            Debug.Log("Configuration loaded: " + selectedConfigToLoad);
+            HideLoadDialog();
         }
         else
         {
-            Debug.Log("No configuration file found at: " + path);
+            Debug.LogWarning("Configuration file not found: " + path);
         }
     }
 
