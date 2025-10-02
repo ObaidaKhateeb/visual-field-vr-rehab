@@ -464,9 +464,9 @@ public class GameLogic : MonoBehaviour
         
         Debug.Log("Chunk completed. Accuracy: " + accuracy.ToString("F1") + "% (" + currentChunkCorrect + "/" + currentChunkTotal + ")");
         
-        if (accuracy >= successRate && currentDistanceFromCenter < 5f)
+        if (accuracy >= successRate && currentDistanceFromCenter < 10f)
         {
-            currentDistanceFromCenter = Mathf.Min(5f, currentDistanceFromCenter + 1f);
+            currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
             Debug.Log("Level UP! New distance: " + currentDistanceFromCenter);
         }
         else if (accuracy <= failRate && currentDistanceFromCenter > 1f)
