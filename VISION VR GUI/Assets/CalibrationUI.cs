@@ -341,13 +341,25 @@ public class CalibrationUI : MonoBehaviour
             File.Delete(path);
             Debug.Log("Configuration deleted: " + selectedConfigToLoad);
             
-            // Remove from GUI
+            // Remove from GUI immediately
             foreach (Transform child in loadDialogContent)
             {
                 if (child.name == selectedConfigToLoad)
                 {
-                    Destroy(child.gameObject);
+                    DestroyImmediate(child.gameObject);
                     break;
+                }
+            }
+            
+            // Reposition remaining toggles
+            int index = 0;
+            foreach (Transform child in loadDialogContent)
+            {
+                RectTransform rt = child.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchoredPosition = new Vector2(0, -index * 35);
+                    index++;
                 }
             }
             
