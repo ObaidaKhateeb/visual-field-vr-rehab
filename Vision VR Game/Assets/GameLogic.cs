@@ -17,6 +17,7 @@ public class GameLogic : MonoBehaviour
     public List<GameObject> imageSet9 = new List<GameObject>();
     public List<GameObject> imageSet10 = new List<GameObject>();
     public List<GameObject> shapePrefabs; //will be set to the chosen set
+    private List<List<GameObject>> activeImageSets = new List<List<GameObject>>();
 
     public float shapeDistance = 2f; //Distance from camera
     public float sideOffset = 0.5f;  // Left/right separation
@@ -40,10 +41,11 @@ public class GameLogic : MonoBehaviour
     private bool waitingForFocusChange = false;
     
 
-    private int successSets; // Number of sets should answered True to count as success
-    private int failureSets; // Number of sets should answered False to count as failure
-    private int consecutiveCorrect = 0; 
-    private int consecutiveIncorrect = 0;
+    private float successRate = 80f; // Rate of sets should answered True to count as success
+    private float failRate = 20f; // Rate of sets should answered False to count as failure
+    private int chunkSize = 15; // Chunk size
+    private int currentChunkCorrect = 0;
+    private int currentChunkTotal = 0;
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-5)
     private float shapeScale = 0.05f; // Scale of the shapes
 
@@ -62,30 +64,6 @@ public class GameLogic : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    void Update()
-    {
-        if (inputAccepted && Input.GetKeyDown(KeyCode.Space))
-        {
-            if (shapesAreSimilar)
-            {
-                Debug.Log("Correct (Shapes are similar)");
-                audioSource.PlayOneShot(correctSound);
-                consecutiveCorrect++;
-                consecutiveIncorrect = 0;
-                CheckDistanceFromCenterIncr();
-            }
-            else
-            {
-                Debug.Log("Incorrect (Shapes are different)");
-                audioSource.PlayOneShot(incorrectSound);
-                consecutiveIncorrect++;
-                consecutiveCorrect = 0;
-                CheckDistanceFromCenterDecr();
-            }
-            inputAccepted = false;
-        }
-    }
-
     void LoadSettings()
     {
         string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
@@ -101,13 +79,14 @@ public class GameLogic : MonoBehaviour
             currentDistanceFromCenter = settings.startingDistance;
             shapeScale = settings.shapeScale;
 
-            //Success and Fail definitions
-            successSets = settings.successSets;
-            failureSets = settings.failureSets;
+            //Success, Fail, and Chunk definitions
+            successRate = settings.successRate;
+            failRate = settings.failRate;
+            chunkSize = settings.chunkSize;
             
             //Focus point settings: location, size, shape, and change mode.
             ApplyFocusSettings(settings);
-            SetActiveImageSet(settings.imageSet);
+            SetActiveImageSets(settings.imageSets);
             
             Debug.Log("Settings loaded successfully");
         }
@@ -118,23 +97,44 @@ public class GameLogic : MonoBehaviour
     }
 
     //a function responsible for settings the chosen set of images 
-    void SetActiveImageSet(int setNumber)
+    void SetActiveImageSets(List<int> setNumbers)
     {
-        switch(setNumber)
+        activeImageSets.Clear(); // Clear any previous selections
+        
+        foreach(int setNumber in setNumbers)
         {
-            case 1: shapePrefabs = imageSet1; break;
-            case 2: shapePrefabs = imageSet2; break;
-            case 3: shapePrefabs = imageSet3; break;
-            case 4: shapePrefabs = imageSet4; break;
-            case 5: shapePrefabs = imageSet5; break;
-            case 6: shapePrefabs = imageSet6; break;
-            case 7: shapePrefabs = imageSet7; break;
-            case 8: shapePrefabs = imageSet8; break;
-            case 9: shapePrefabs = imageSet9; break;
-            case 10: shapePrefabs = imageSet10; break;
-            default: 
-                shapePrefabs = imageSet1; 
-                break;
+            switch(setNumber)
+            {
+                case 1: activeImageSets.Add(imageSet1); break;
+                case 2: activeImageSets.Add(imageSet2); break;
+                case 3: activeImageSets.Add(imageSet3); break;
+                case 4: activeImageSets.Add(imageSet4); break;
+                case 5: activeImageSets.Add(imageSet5); break;
+                case 6: activeImageSets.Add(imageSet6); break;
+                case 7: activeImageSets.Add(imageSet7); break;
+                case 8: activeImageSets.Add(imageSet8); break;
+                case 9: activeImageSets.Add(imageSet9); break;
+                case 10: activeImageSets.Add(imageSet10); break;
+                default: 
+                    Debug.LogWarning("Invalid image set number: " + setNumber);
+                    break;
+            }
+        }
+        
+        // if no valid set was selected, use all the sets as default
+        if (activeImageSets.Count == 0)
+        {
+            activeImageSets.Add(imageSet1);
+            activeImageSets.Add(imageSet2);
+            activeImageSets.Add(imageSet3);
+            activeImageSets.Add(imageSet4);
+            activeImageSets.Add(imageSet5);
+            activeImageSets.Add(imageSet6);
+            activeImageSets.Add(imageSet7);
+            activeImageSets.Add(imageSet8);
+            activeImageSets.Add(imageSet9);
+            activeImageSets.Add(imageSet10);
+            Debug.LogWarning("No image sets selected, using all image sets as default");
         }
     }
 
@@ -226,14 +226,24 @@ public class GameLogic : MonoBehaviour
             float timer = 0f;
             while (timer < maxResponseTime)
             {
-                if (!inputAccepted)
+                if (inputAccepted && Input.GetKeyDown(KeyCode.Space))
                 {
                     responded = true;
                     if (shapesAreSimilar)
                     {
+                        Debug.Log("Correct (Shapes are similar)");
+                        audioSource.PlayOneShot(correctSound);
+                        correctResponses++;
                         totalResponseTime += timer;
                         responseCount++;
                     }
+                    else
+                    {
+                        Debug.Log("Incorrect (Shapes are different)");
+                        audioSource.PlayOneShot(incorrectSound);
+                        incorrectResponses++;
+                    }
+                    inputAccepted = false;
                     break;  // User pressed SPACE
                 }
 
@@ -248,18 +258,12 @@ public class GameLogic : MonoBehaviour
                 {
                     Debug.Log("Correct (Shapes are different)");
                     audioSource.PlayOneShot(correctSound);
-                    consecutiveCorrect++;
-                    consecutiveIncorrect = 0;
-                    CheckDistanceFromCenterIncr();
                     correctResponses++;
                 }
                 else
                 {
                     Debug.Log("Incorrect (Shapes are similar)");
                     audioSource.PlayOneShot(incorrectSound);
-                    consecutiveIncorrect++;
-                    consecutiveCorrect = 0;
-                    CheckDistanceFromCenterDecr();
                     incorrectResponses++;
                 }
             }
@@ -269,12 +273,124 @@ public class GameLogic : MonoBehaviour
             Destroy(rightShape);
             inputAccepted = false;
 
+            // Track chunk progress
+            currentChunkTotal++;
+            if ((responded && shapesAreSimilar) || (!responded && !shapesAreSimilar))
+            {
+                currentChunkCorrect++;
+            }
+            
+            // Check if chunk is complete
+            if (currentChunkTotal >= chunkSize)
+            {
+                EvaluateChunk();
+                currentChunkCorrect = 0;
+                currentChunkTotal = 0;
+            }
+
             yield return new WaitForSeconds(betweenShapesDuration/1000f);
 
             elapsedTime += Time.time - roundStartTime; //update elapsed time
         }
         LogGameStatistics();
     }
+
+    // IEnumerator RunTrials()
+    // {
+    //     float elapsedTime = 0f;
+    //     while (elapsedTime < gameDuration)
+    //     {
+    //         float roundStartTime = Time.time; //round start time 
+
+    //         // Changing focus point position logic 
+    //         setsUntilChange--; 
+    //         if (focusChangeMode != 0 && setsUntilChange <= 0 && !waitingForFocusChange)
+    //         {
+    //             waitingForFocusChange = true;
+    //             ChangeFocusPoint();
+    //             yield return new WaitForSeconds(1f); //wait 1 second after changing
+    //             ResetSetCounter();
+    //             waitingForFocusChange = false;
+    //         }
+
+    //         // Shapes choosing and showing
+    //         SpawnShapes();
+    //         // shapes hide 
+    //         StartCoroutine(HideShapesAfterDelay(shapeDisplayDuration/1000f));
+    //         inputAccepted = true;
+    //         bool responded = false;
+
+    //         // Wait for up to 2 seconds or betweenShapesDuration time for user to press SPACE
+    //         float maxResponseTime = Mathf.Min(2f, betweenShapesDuration/1000f);
+    //         float timer = 0f;
+    //         while (timer < maxResponseTime)
+    //         {
+    //             if (!inputAccepted)
+    //             {
+    //                 responded = true;
+    //                 if (shapesAreSimilar)
+    //                 {
+    //                     totalResponseTime += timer;
+    //                     responseCount++;
+    //                 }
+    //                 break;  // User pressed SPACE
+    //             }
+
+    //             timer += Time.deltaTime;
+    //             yield return null;
+    //         }
+
+    //         //Evaluate non-response if SPACE wasn't pressed
+    //         if (!responded)
+    //         {
+    //             if (!shapesAreSimilar)
+    //             {
+    //                 Debug.Log("Correct (Shapes are different)");
+    //                 audioSource.PlayOneShot(correctSound);
+    //                 consecutiveCorrect++;
+    //                 consecutiveIncorrect = 0;
+    //                 correctResponses++;
+    //             }
+    //             else
+    //             {
+    //                 Debug.Log("Incorrect (Shapes are similar)");
+    //                 audioSource.PlayOneShot(incorrectSound);
+    //                 consecutiveIncorrect++;
+    //                 consecutiveCorrect = 0;
+    //                 incorrectResponses++;
+    //             }
+    //         }
+
+    //         //Clean up
+    //         Destroy(leftShape);
+    //         Destroy(rightShape);
+    //         inputAccepted = false;
+
+    //         // Track chunk progress
+    //         currentChunkTotal++;
+    //         if (responded && shapesAreSimilar) // correctly responded to similar shapes
+    //         {
+    //             currentChunkCorrect++;
+    //         }
+    //         else if (!responded && !shapesAreSimilar) //correctly didn't responded to non-similar shapes
+    //         {
+    //             currentChunkCorrect++;
+    //         }
+
+    //         // Check if chunk is complete
+    //         if (currentChunkTotal >= chunkSize)
+    //         {
+    //             EvaluateChunk();
+    //             currentChunkCorrect = 0;
+    //             currentChunkTotal = 0;
+    //         }
+
+    //         yield return new WaitForSeconds(betweenShapesDuration / 1000f);
+
+    //         elapsedTime += Time.time - roundStartTime; //update elapsed time
+    //     }
+    //     LogGameStatistics();
+    // }
 
     // Coroutine to hide shapes after a delay
     IEnumerator HideShapesAfterDelay(float delay)
@@ -299,14 +415,27 @@ public class GameLogic : MonoBehaviour
         Vector3 rightPos = center + focusPoint.right * currentDistanceFromCenter * sideOffset;
         Vector3 leftPos = center - focusPoint.right * currentDistanceFromCenter * sideOffset;
 
+        // Choose a random image set from the active sets
+        int setIndex = Random.Range(0, activeImageSets.Count);
+        List<GameObject> chosenSet = activeImageSets[setIndex];
 
-        // Choose right shape
-        int index = Random.Range(0, shapePrefabs.Count);
-        GameObject right = shapePrefabs[index];
+        // Choose right shape from that set
+        int rightIndex = Random.Range(0, chosenSet.Count);
+        GameObject right = chosenSet[rightIndex];
 
         // 50% chance to match
         bool same = Random.value < 0.5f;
-        GameObject left = same ? right : shapePrefabs[Random.Range(0, shapePrefabs.Count)];
+        GameObject left;
+        if (same)
+        {
+            left = right;
+        }
+        else
+        {
+            // Pick a different shape from the SAME set
+            int leftIndex = Random.Range(0, chosenSet.Count);
+            left = chosenSet[leftIndex];
+        }
 
         shapesAreSimilar = same;
 
@@ -328,23 +457,26 @@ public class GameLogic : MonoBehaviour
             totalNonSimilarPairs++;
     }
 
-    void CheckDistanceFromCenterIncr()
+
+    void EvaluateChunk()
     {
-        if (consecutiveCorrect >= successSets && currentDistanceFromCenter < 5f)
+        float accuracy = (float)currentChunkCorrect / currentChunkTotal * 100f;
+        
+        Debug.Log("Chunk completed. Accuracy: " + accuracy.ToString("F1") + "% (" + currentChunkCorrect + "/" + currentChunkTotal + ")");
+        
+        if (accuracy >= successRate && currentDistanceFromCenter < 5f)
         {
             currentDistanceFromCenter = Mathf.Min(5f, currentDistanceFromCenter + 1f);
-            consecutiveCorrect = 0;
-            Debug.Log("Difficulty increased. New multiplier: " + currentDistanceFromCenter);
+            Debug.Log("Level UP! New distance: " + currentDistanceFromCenter);
         }
-    }
-
-    void CheckDistanceFromCenterDecr()
-    {
-        if (consecutiveIncorrect >= failureSets && currentDistanceFromCenter > 1f)
+        else if (accuracy <= failRate && currentDistanceFromCenter > 1f)
         {
             currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
-            consecutiveIncorrect = 0;
-            Debug.Log("Difficulty decreased. New multiplier: " + currentDistanceFromCenter);
+            Debug.Log("Level DOWN! New distance: " + currentDistanceFromCenter);
+        }
+        else
+        {
+            Debug.Log("Level maintained at: " + currentDistanceFromCenter);
         }
     }
 
@@ -372,8 +504,9 @@ public class GameLogic : MonoBehaviour
         public int intervalSets;
         public float startingDistance = 1f;
         public float shapeScale = 0.05f;
-        public int successSets;
-        public int failureSets;
-        public int imageSet = 1;
+        public float successRate = 80f;
+        public float failRate = 20f;
+        public int chunkSize = 15;
+        public List<int> imageSets = new List<int>();
     }
 }
