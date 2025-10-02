@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
 
 public class GameLogic : MonoBehaviour
 {
@@ -24,6 +25,8 @@ public class GameLogic : MonoBehaviour
     public float gameDuration = 10f;   //number of rounds
     public float shapeDisplayDuration = 1500f; //Duration of showing shapes
     public float betweenShapesDuration = 1500f; //Duration between showing sets
+    
+    public Text countdownText;
     public Transform focusPoint;
 
     // sounds-related variables
@@ -199,6 +202,31 @@ public class GameLogic : MonoBehaviour
 
     IEnumerator RunTrials()
     {
+        yield return new WaitForSeconds(3f); //Wait 3 seconds before starting
+
+        if (focusPoint != null)
+            focusPoint.gameObject.SetActive(false);
+        if (countdownText != null)
+            {
+                yield return new WaitForSeconds(1f);
+
+                countdownText.gameObject.SetActive(true);
+                
+                countdownText.text = "3";
+                yield return new WaitForSeconds(1f);
+                
+                countdownText.text = "2";
+                yield return new WaitForSeconds(1f);
+                
+                countdownText.text = "1";
+                yield return new WaitForSeconds(1f);
+                
+                countdownText.gameObject.SetActive(false);
+            }
+        if (focusPoint != null)
+            focusPoint.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
+
         float elapsedTime = 0f;
         while (elapsedTime < gameDuration)
         {
