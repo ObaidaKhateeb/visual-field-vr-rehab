@@ -144,6 +144,7 @@ public class CalibrationUI : MonoBehaviour
         }
         
         VRSettings settings = new VRSettings();
+        string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         
         // Durations: game, set display, and between sets.
         if (float.TryParse(timeInput.text, out float minutes))
@@ -454,6 +455,7 @@ public class CalibrationUI : MonoBehaviour
         }
 
        VRSettings settings = new VRSettings();
+       string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
        
        // Durations: game, set display, and between sets.
        if (float.TryParse(timeInput.text, out float minutes))
@@ -501,21 +503,16 @@ public class CalibrationUI : MonoBehaviour
         }
 
         // User details
-        settings.userName = userName;
         settings.userID = userID;
-        settings.userAge = age;
-        settings.userGender = GenderDropdown.value; 
-        settings.birthYear = DateYearDropDown.value;
-        settings.birthMonth = DateMonthDropDown.value;
-        settings.birthDay = DateDayDropDown.value;
         settings.trainingEye = EyeDropDown.value; // 0 = Right, 1 = Left
+        settings.sessionTimestamp = timestamp;
 
         // Saving the settings
        string json = JsonUtility.ToJson(settings, true);
        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
        File.WriteAllText(path, json);
        
-       SaveUserDetailsToCSV(settings);
+       SaveUserDetailsToCSV(userName, userID, age, GenderDropdown.value, DateYearDropDown.value, DateMonthDropDown.value, DateDayDropDown.value, EyeDropDown.value, timestamp);
        Application.Quit();
    }
 
@@ -560,7 +557,7 @@ public class CalibrationUI : MonoBehaviour
         MessageDialogPanel.SetActive(true);
     }
 
-    void SaveUserDetailsToCSV(VRSettings settings)
+    void SaveUserDetailsToCSV(string userName, string userID, int userAge, int userGender, int birthYear, int birthMonth, int birthDay, int trainingEye, string timestamp)
     {
         string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
         
@@ -577,14 +574,14 @@ public class CalibrationUI : MonoBehaviour
             
             for (int i = 0; i < existingLines.Length; i++)
             {
-                if (existingLines[i].StartsWith(settings.userID + ","))
+                if (existingLines[i].StartsWith(userID + ","))
                 {
                     string[] fields = existingLines[i].Split(',');
                     if (fields.Length >= 8)
                     {
                         //Updating EyeTrained
                         string previousEyeText = fields[7]; 
-                        string currentEyeText = settings.trainingEye == 0 ? "Right" : "Left";                        
+                        string currentEyeText = trainingEye == 0 ? "Right" : "Left";                        
                         string newEyeText;
                         if (previousEyeText == "Both" || previousEyeText == currentEyeText)
                         {
@@ -596,10 +593,10 @@ public class CalibrationUI : MonoBehaviour
                         }
                         
                         //Updating the other details
-                        string genderText = settings.userGender == 0 ? "Male" : "Female";
+                        string genderText = userGender == 0 ? "Male" : "Female";
                         string firstAdded = fields[8]; 
-                        string lastUpdate = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        existingLines[i] = $"{settings.userID},{settings.userName},{settings.userAge},{genderText},{settings.birthYear},{settings.birthMonth},{settings.birthDay},{newEyeText},{firstAdded},{lastUpdate}";
+                        string lastUpdate = timestamp;
+                        existingLines[i] = $"{userID},{userName},{userAge},{genderText},{birthYear},{birthMonth},{birthDay},{newEyeText},{firstAdded},{lastUpdate}";
                         
                         File.WriteAllLines(csvPath, existingLines);
                     }
@@ -615,11 +612,11 @@ public class CalibrationUI : MonoBehaviour
             {
                 writer.WriteLine("ID,Name,Age,Gender,BirthYear,BirthMonth,BirthDay,EyeTrained,FirstAdded,LastUpdate");
             }
-            string genderText = settings.userGender == 0 ? "Male" : "Female";
-            string eyeText = settings.trainingEye == 0 ? "Right" : "Left";
-            string currentTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string genderText = userGender == 0 ? "Male" : "Female";
+            string eyeText = trainingEye == 0 ? "Right" : "Left";
+            string currentTime = timestamp;
 
-            writer.WriteLine($"{settings.userID},{settings.userName},{settings.userAge},{genderText},{settings.birthYear},{settings.birthMonth},{settings.birthDay},{eyeText},{currentTime},{currentTime}");
+            writer.WriteLine($"{userID},{userName},{userAge},{genderText},{birthYear},{birthMonth},{birthDay},{eyeText},{currentTime},{currentTime}");
         }
     }
 }
@@ -647,12 +644,7 @@ public class VRSettings
     // public int focuscolorDurationDropdown;
 
     //User details
-    public string userName;
     public string userID;
-    public int userAge;
-    public int userGender;
-    public int birthYear;
-    public int birthMonth;
-    public int birthDay;
     public int trainingEye; // 0 = Right eye, 1 = Left eye
+    public string sessionTimestamp;
 }
