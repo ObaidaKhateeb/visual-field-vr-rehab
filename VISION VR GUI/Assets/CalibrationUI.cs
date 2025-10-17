@@ -515,6 +515,7 @@ public class CalibrationUI : MonoBehaviour
        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
        File.WriteAllText(path, json);
        
+       SaveUserDetailsToCSV(settings);
        Application.Quit();
    }
 
@@ -557,6 +558,69 @@ public class CalibrationUI : MonoBehaviour
     {
         MessageText.text = message;
         MessageDialogPanel.SetActive(true);
+    }
+
+    void SaveUserDetailsToCSV(VRSettings settings)
+    {
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        
+        if (!Directory.Exists(csvFolder))
+            Directory.CreateDirectory(csvFolder);
+        
+        string csvPath = Path.Combine(csvFolder, "user_details.csv");
+        
+        bool fileExists = File.Exists(csvPath);
+
+        if (fileExists)
+        {
+            string[] existingLines = File.ReadAllLines(csvPath);
+            
+            for (int i = 0; i < existingLines.Length; i++)
+            {
+                if (existingLines[i].StartsWith(settings.userID + ","))
+                {
+                    string[] fields = existingLines[i].Split(',');
+                    if (fields.Length >= 8)
+                    {
+                        //Updating EyeTrained
+                        string previousEyeText = fields[7]; 
+                        string currentEyeText = settings.trainingEye == 0 ? "Right" : "Left";                        
+                        string newEyeText;
+                        if (previousEyeText == "Both" || previousEyeText == currentEyeText)
+                        {
+                            newEyeText = previousEyeText; 
+                        }
+                        else
+                        {
+                            newEyeText = "Both"; 
+                        }
+                        
+                        //Updating the other details
+                        string genderText = settings.userGender == 0 ? "Male" : "Female";
+                        string firstAdded = fields[8]; 
+                        string lastUpdate = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        existingLines[i] = $"{settings.userID},{settings.userName},{settings.userAge},{genderText},{settings.birthYear},{settings.birthMonth},{settings.birthDay},{newEyeText},{firstAdded},{lastUpdate}";
+                        
+                        File.WriteAllLines(csvPath, existingLines);
+                    }
+                    
+                    return;
+                }
+            }
+        }
+        
+        using (StreamWriter writer = new StreamWriter(csvPath, true))
+        {
+            if (!fileExists)
+            {
+                writer.WriteLine("ID,Name,Age,Gender,BirthYear,BirthMonth,BirthDay,EyeTrained,FirstAdded,LastUpdate");
+            }
+            string genderText = settings.userGender == 0 ? "Male" : "Female";
+            string eyeText = settings.trainingEye == 0 ? "Right" : "Left";
+            string currentTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            writer.WriteLine($"{settings.userID},{settings.userName},{settings.userAge},{genderText},{settings.birthYear},{settings.birthMonth},{settings.birthDay},{eyeText},{currentTime},{currentTime}");
+        }
     }
 }
 
