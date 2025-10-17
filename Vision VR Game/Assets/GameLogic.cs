@@ -60,6 +60,10 @@ public class GameLogic : MonoBehaviour
     private float totalResponseTime = 0f;
     private int responseCount = 0;
 
+    private string loadedUserID;
+    private int loadedTrainingEye;
+    private string loadedTimestamp;
+
 
     void Start()
     {
@@ -91,6 +95,11 @@ public class GameLogic : MonoBehaviour
             //Focus point settings: location, size, shape, and change mode.
             ApplyFocusSettings(settings);
             SetActiveImageSets(settings.imageSets);
+
+            //User details
+            loadedUserID = settings.userID;
+            loadedTrainingEye = settings.trainingEye;
+            loadedTimestamp = settings.sessionTimestamp;
             
             Debug.Log("Settings loaded successfully");
         }
@@ -604,6 +613,34 @@ public class GameLogic : MonoBehaviour
         Debug.Log("=== RESULTS ===");
         Debug.Log("Overall Accuracy: " + overallAccuracy.ToString("F1") + "% (" + correctResponses + "/" + totalTrials + ")");
         Debug.Log("Overall Average Response Time: " + averageResponseTime.ToString("F1") + " seconds");
+
+        SaveResultsToCSV(overallAccuracy, averageResponseTime, totalTrials);
+    }
+
+    void SaveResultsToCSV(float accuracy, float avgResponseTime, int totalTrials)
+    {
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        
+        if (!Directory.Exists(csvFolder))
+            Directory.CreateDirectory(csvFolder);
+        
+        string csvPath = Path.Combine(csvFolder, "game_results.csv");
+        
+        bool fileExists = File.Exists(csvPath);
+        
+        using (StreamWriter writer = new StreamWriter(csvPath, true))
+        {
+            if (!fileExists)
+            {
+                writer.WriteLine("UserID,Timestamp,EyeTrained,Accuracy,AvgResponseTime,TotalTrials,CorrectResponses");
+            }
+            
+            string eyeText = loadedTrainingEye == 0 ? "Right" : "Left";
+
+            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{accuracy:F1},{avgResponseTime:F2},{totalTrials},{correctResponses}");
+        }
+        
+        Debug.Log("Results saved to CSV successfully");
     }
 
     [System.Serializable]
@@ -623,5 +660,8 @@ public class GameLogic : MonoBehaviour
         public float failRate = 20f;
         public int chunkSize = 15;
         public List<int> imageSets = new List<int>();
+        public string userID;
+        public int trainingEye;
+        public string sessionTimestamp;
     }
 }
