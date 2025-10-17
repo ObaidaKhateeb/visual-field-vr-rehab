@@ -34,7 +34,7 @@ public class CalibrationUI : MonoBehaviour
 
    public Button saveConfigButton; // Save configuration button
    public Button loadConfigButton; // Load configuration button
-   public Button startButton; // Start button, save settings
+   public Button continueButton; // Start button, save settings
 
    //Save and load Dialogs
    public GameObject saveDialogPanel;
@@ -56,6 +56,18 @@ public class CalibrationUI : MonoBehaviour
 
    public GameObject uiPanel;
 
+    //User details panel
+    public GameObject infoPannel;
+    public InputField NameInput;
+    public InputField IDInput;
+    public InputField AgeInput;
+    public Dropdown GenderDropdown;
+    public Dropdown DateYearDropDown;
+    public Dropdown DateMonthDropDown;
+    public Dropdown DateDayDropDown;
+    public Dropdown EyeDropDown; // Right eye = 0, Left eye = 1
+    public Button StartButton;
+
     void Start()
     {
         //sliders text values 
@@ -67,7 +79,7 @@ public class CalibrationUI : MonoBehaviour
 
         saveConfigButton.onClick.AddListener(ShowSaveDialog);
         loadConfigButton.onClick.AddListener(ShowLoadDialog);
-        startButton.onClick.AddListener(SaveSettingsAndClose);
+        continueButton.onClick.AddListener(ShowInfoPanel);
 
         //save and load dialogs buttons
         saveDialogSaveButton.onClick.AddListener(SaveConfigurationWithName);
@@ -78,6 +90,9 @@ public class CalibrationUI : MonoBehaviour
 
         //Message dialog
         MessageOkButton.onClick.AddListener(() => MessageDialogPanel.SetActive(false));
+
+        //Start button
+        StartButton.onClick.AddListener(SaveSettingsAndClose);
 
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
         OnFocusChangeDropdownChanged();
@@ -415,6 +430,29 @@ public class CalibrationUI : MonoBehaviour
 
    void SaveSettingsAndClose()
    {
+        //User details validation
+        string userName = NameInput.text.Trim();
+        string userID = IDInput.text.Trim();
+        string userAge = AgeInput.text.Trim();
+
+        if (string.IsNullOrEmpty(userName))
+        {
+            showMessage(".לופטמה םש תא ןיזהל אנ");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(userID))
+        {
+            showMessage(".תוהזה תדועת רפסמ תא ןיזהל אנ");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(userAge) || !int.TryParse(userAge, out int age))
+        {
+            showMessage(".ןיקת ליג ןיזהל אנ");
+            return;
+        }
+
        VRSettings settings = new VRSettings();
        
        // Durations: game, set display, and between sets.
@@ -462,6 +500,16 @@ public class CalibrationUI : MonoBehaviour
                 settings.imageSets.Add(i + 1);
         }
 
+        // User details
+        settings.userName = userName;
+        settings.userID = userID;
+        settings.userAge = age;
+        settings.userGender = GenderDropdown.value; 
+        settings.birthYear = DateYearDropDown.value;
+        settings.birthMonth = DateMonthDropDown.value;
+        settings.birthDay = DateDayDropDown.value;
+        settings.trainingEye = EyeDropDown.value; // 0 = Right, 1 = Left
+
         // Saving the settings
        string json = JsonUtility.ToJson(settings, true);
        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
@@ -473,6 +521,30 @@ public class CalibrationUI : MonoBehaviour
     public void OnFocusChangeDropdownChanged()
     {
         intervalSetsDropdown.interactable = focusChangeDropdown.value == 1;
+    }
+
+    void ShowInfoPanel()
+    {
+        //Check if at least one image set is selected
+        bool anySelected = false;
+        for (int i = 0; i < imageSetToggles.Count; i++)
+        {
+            if (imageSetToggles[i].isOn)
+            {
+                anySelected = true;
+                break;
+            }
+        }
+
+        if (!anySelected)
+        {
+            showMessage(".דחא לפל רוחבל שי - תונומת יטס");
+            return;
+        }
+
+        //Hide main panel and show info panel
+        uiPanel.SetActive(false);
+        infoPannel.SetActive(true);
     }
 
     // public void OnFocusColorChangeDropdownChanged()
@@ -509,4 +581,14 @@ public class VRSettings
     // public bool focuscolorChangeDropdown;
     // public int focuscolorChoiceDropdown;
     // public int focuscolorDurationDropdown;
+
+    //User details
+    public string userName;
+    public string userID;
+    public int userAge;
+    public int userGender;
+    public int birthYear;
+    public int birthMonth;
+    public int birthDay;
+    public int trainingEye; // 0 = Right eye, 1 = Left eye
 }
