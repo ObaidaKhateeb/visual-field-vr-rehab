@@ -57,9 +57,9 @@ public class GameLogic : MonoBehaviour
     private int totalSimilarPairs = 0;
     private int totalNonSimilarPairs = 0;
     private int correctResponses = 0;
-    private int incorrectResponses = 0;
     private float totalResponseTime = 0f;
     private int responseCount = 0;
+
 
     void Start()
     {
@@ -263,14 +263,15 @@ public class GameLogic : MonoBehaviour
                         Debug.Log("Correct (Shapes are similar)");
                         audioSource.PlayOneShot(correctSound);
                         correctResponses++;
-                        totalResponseTime += timer;
                         responseCount++;
+                        totalResponseTime += timer;
                     }
                     else
                     {
                         Debug.Log("Incorrect (Shapes are different)");
                         audioSource.PlayOneShot(incorrectSound);
-                        incorrectResponses++;
+                        responseCount++;
+                        totalResponseTime += timer;
                     }
                     inputAccepted = false;
                     break;  // User pressed SPACE
@@ -293,7 +294,6 @@ public class GameLogic : MonoBehaviour
                 {
                     Debug.Log("Incorrect (Shapes are similar)");
                     audioSource.PlayOneShot(incorrectSound);
-                    incorrectResponses++;
                 }
             }
 
@@ -597,13 +597,13 @@ public class GameLogic : MonoBehaviour
 
     void LogGameStatistics()
     {
-        float successRate = totalSimilarPairs > 0 ? (float)correctResponses / totalSimilarPairs * 100f : 0f;
-        
+        int totalTrials = totalSimilarPairs + totalNonSimilarPairs;
+        float overallAccuracy = totalTrials > 0 ? (float)correctResponses / totalTrials * 100f : 0f;
+        float averageResponseTime = responseCount > 0 ? (totalResponseTime / responseCount) : 0f;
+
         Debug.Log("=== RESULTS ===");
-        Debug.Log("Success Rate: " + successRate.ToString("F1") + "% (" + correctResponses + "/" + totalSimilarPairs + ")");
-        float failRate = totalNonSimilarPairs > 0 ? (float)incorrectResponses / totalNonSimilarPairs * 100f : 0f;
-        Debug.Log("Fail Rate: " + failRate.ToString("F1") + "% (" + incorrectResponses + "/" + totalNonSimilarPairs + ")");
-        Debug.Log("Average Response Time: " + (responseCount > 0 ? (totalResponseTime / responseCount).ToString("F2") : "0") + " seconds");
+        Debug.Log("Overall Accuracy: " + overallAccuracy.ToString("F1") + "% (" + correctResponses + "/" + totalTrials + ")");
+        Debug.Log("Overall Average Response Time: " + averageResponseTime.ToString("F1") + " seconds");
     }
 
     [System.Serializable]
