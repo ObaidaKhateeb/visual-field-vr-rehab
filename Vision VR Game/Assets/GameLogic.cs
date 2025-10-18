@@ -61,6 +61,8 @@ public class GameLogic : MonoBehaviour
     private int responseCount = 0;
 
     private int loadedFocusShape;
+    private float loadedFocusY;
+    private float loadedFocusScale;
     private float loadedStartingDistance;
     private float loadedShapeScale;
     private string loadedUserID;
@@ -90,6 +92,8 @@ public class GameLogic : MonoBehaviour
             currentDistanceFromCenter = settings.startingDistance;
             shapeScale = settings.shapeScale;
             loadedFocusShape = settings.focusShape;
+            loadedFocusY = settings.focusY;
+            loadedFocusScale = settings.focusScale;
             loadedShapeScale = settings.shapeScale;
             loadedStartingDistance = settings.startingDistance;
 
@@ -638,12 +642,15 @@ public class GameLogic : MonoBehaviour
         {
             if (!fileExists)
             {
-                writer.WriteLine("UserID,Timestamp,EyeTrained,GameDuration,FocusY,FocusScale,FocusShape,ShapeDisplayDuration,BetweenShapesDuration,FocusChangeMode,IntervalSets,SuccessRate,FailRate,ChunkSize,StartingDistance,StartingShapeScale,Accuracy,AvgResponseTime,TotalTrials,CorrectResponses");
+                writer.WriteLine("ID,Test Time,Eye Trained,Test Duration (m),Focus Point Position,Focus Point Scale,Focus Point Shape,Set Display Duration (ms),Between Sets Duration (ms),Focus Point Change Mode,Focus Point Change Frequency (Intervals),Success Rate,Fail Rate,Chunk Size,Starting Distance,Starting Shape Scale,Overall Accuracy,Overall Average Response Time (s),Overall Trials,Overall Correct Responses");
             }
             
             string eyeText = loadedTrainingEye == 0 ? "Right" : "Left";
+            string focusShapeText = loadedFocusShape == 0 ? "Circle" : "Cross";
+            string focusChangeModeText = focusChangeMode == 0 ? "Fixed" : (focusChangeMode == 1 ? "Changes at fixed intervals" : "Changes Randomly");
+            string intervalSetsText = focusChangeMode == 1 ? intervalSets.ToString() : "N/A";
 
-            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration},{focusPoint.localPosition.y},{focusPoint.localScale.x},{loadedFocusShape},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeMode},{intervalSets},{successRate},{failRate},{chunkSize},{loadedStartingDistance},{Mathf.RoundToInt(loadedShapeScale / 0.005f)},{accuracy:F1},{avgResponseTime:F2},{totalTrials},{correctResponses}");
+            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration / 60f},{loadedFocusY * 100f},{loadedFocusScale * 100f},{focusShapeText},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeModeText},{intervalSetsText},{successRate}%,{failRate}%,{chunkSize},{loadedStartingDistance},{Mathf.RoundToInt(loadedShapeScale / 0.005f)},{accuracy:F1}%,{avgResponseTime:F2},{totalTrials},{correctResponses}");
         }
         
         Debug.Log("Results saved to CSV successfully");
