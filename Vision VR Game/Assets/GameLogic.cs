@@ -61,6 +61,7 @@ public class GameLogic : MonoBehaviour
     private int responseCount = 0;
     private Dictionary<string, LevelStats> levelStatistics = new Dictionary<string, LevelStats>(); // level statistics dictionary
     private LevelStats currentLevelStats; // current level statistics
+    private string levelProgression = "";
 
     private int loadedFocusShape;
     private float loadedFocusY;
@@ -250,6 +251,7 @@ public class GameLogic : MonoBehaviour
 
         float elapsedTime = 0f;
         currentLevelStats = GetOrCreateLevelStats((int)currentDistanceFromCenter, Mathf.RoundToInt(shapeScale / 0.005f));
+        levelProgression = $"Start(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
         while (elapsedTime < gameDuration || currentChunkTotal > 0)
         {
             float roundStartTime = Time.time; //round start time 
@@ -546,6 +548,7 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
                     Debug.Log("Level UP! Shape size decreased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = false; // Next time change distance
+                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else if (currentDistanceFromCenter < 10f)
                 {
@@ -553,10 +556,12 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Size at minimum, distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = false; // Next time still try size first
+                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
+                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
             }
             else
@@ -567,6 +572,7 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = true; // Next time change size
+                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else if (shapeScale > 0.005f)
                 {
@@ -574,10 +580,12 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
                     Debug.Log("Level UP! Distance at maximum, size decreased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = true; // Next time still try distance first
+                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
+                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
             }
         }
@@ -592,6 +600,7 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
                     Debug.Log("Level DOWN! Shape size increased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = false; // Next time change distance
+                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else if (currentDistanceFromCenter > 1f)
                 {
@@ -599,10 +608,12 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
                     Debug.Log("Level DOWN! Size at maximum, distance decreased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = false; // Next time still try size first
+                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else
                 {
                     Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
+                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
             }
             else
@@ -613,6 +624,7 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
                     Debug.Log("Level DOWN! Distance decreased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = true; // Next time change size
+                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else if (shapeScale < 0.05f)
                 {
@@ -620,16 +632,19 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
                     Debug.Log("Level DOWN! Distance at minimum, size increased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = true; // Next time still try distance first
+                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
                 else
                 {
                     Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
+                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
                 }
             }
         }
         else
         {
             Debug.Log("Level maintained. Current: distance=" + currentDistanceFromCenter + ", size=" + (shapeScale / 0.005f));
+            levelProgression += $",Same(D{(int)currentDistanceFromCenter}S{Mathf.RoundToInt(shapeScale / 0.005f)})";
         }
     }
 
@@ -675,7 +690,7 @@ public class GameLogic : MonoBehaviour
             //Header row writing
             if (!fileExists)
             {
-                string header = "ID,Test Time,Eye Trained,Test Duration (m),Focus Point Position,Focus Point Scale,Focus Point Shape,Set Display Duration (ms),Between Sets Duration (ms),Focus Point Change Mode,Focus Point Change Frequency (Intervals),Success Rate,Fail Rate,Chunk Size,Starting Distance,Starting Shape Scale,Overall Accuracy,Overall Average Response Time (s),Overall Trials,Overall Correct Responses";
+                string header = "ID,Test Time,Eye Trained,Test Duration (m),Focus Point Position,Focus Point Scale,Focus Point Shape,Set Display Duration (ms),Between Sets Duration (ms),Focus Point Change Mode,Focus Point Change Frequency (Intervals),Success Rate,Fail Rate,Chunk Size,Starting Distance,Starting Shape Scale,Overall Accuracy,Overall Average Response Time (s),Overall Trials,Overall Correct Responses";               
                 for (int i = 0; i < 20; i++)
                 {
                     header += $",D{d}S{s} Accuracy,D{d}S{s} Avg Response Time,D{d}S{s} Trials,D{d}S{s} Correct Responses";
@@ -684,6 +699,7 @@ public class GameLogic : MonoBehaviour
                     else 
                         s--;
                 }
+                header += ",Level Progression";
                 writer.WriteLine(header);
             }
             
@@ -712,6 +728,7 @@ public class GameLogic : MonoBehaviour
                 else 
                     s--;
             }
+            dataLine += $",{levelProgression}";
             writer.WriteLine(dataLine);
         }
         
