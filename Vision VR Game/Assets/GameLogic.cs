@@ -643,7 +643,7 @@ public class GameLogic : MonoBehaviour
             
             string eyeText = loadedTrainingEye == 0 ? "Right" : "Left";
 
-            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration},{focusPoint.localPosition.y},{focusPoint.localScale.x},{loadedFocusShape},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeMode},{intervalSets},{successRate},{failRate},{chunkSize},{loadedStartingDistance},{(int)(loadedShapeScale / 0.005f)},{accuracy:F1},{avgResponseTime:F2},{totalTrials},{correctResponses}");
+            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration},{focusPoint.localPosition.y},{focusPoint.localScale.x},{loadedFocusShape},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeMode},{intervalSets},{successRate},{failRate},{chunkSize},{loadedStartingDistance},{Mathf.RoundToInt(loadedShapeScale / 0.005f)},{accuracy:F1},{avgResponseTime:F2},{totalTrials},{correctResponses}");
         }
         
         Debug.Log("Results saved to CSV successfully");
