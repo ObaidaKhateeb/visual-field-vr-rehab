@@ -59,6 +59,8 @@ public class GameLogic : MonoBehaviour
     private int correctResponses = 0;
     private float totalResponseTime = 0f;
     private int responseCount = 0;
+    private Dictionary<string, LevelStats> levelStatistics = new Dictionary<string, LevelStats>(); // level statistics dictionary
+    private LevelStats currentLevelStats; // current level statistics
 
     private int loadedFocusShape;
     private float loadedFocusY;
@@ -247,6 +249,7 @@ public class GameLogic : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         float elapsedTime = 0f;
+        currentLevelStats = GetOrCreateLevelStats((int)currentDistanceFromCenter, Mathf.RoundToInt(shapeScale / 0.005f));
         while (elapsedTime < gameDuration || currentChunkTotal > 0)
         {
             float roundStartTime = Time.time; //round start time 
@@ -281,16 +284,29 @@ public class GameLogic : MonoBehaviour
                     {
                         Debug.Log("Correct (Shapes are similar)");
                         audioSource.PlayOneShot(correctSound);
+
+                        // Update overall stats
                         correctResponses++;
                         responseCount++;
                         totalResponseTime += timer;
+
+                        // Update level stats
+                        currentLevelStats.correctResponses++;
+                        currentLevelStats.responseCount++;
+                        currentLevelStats.totalResponseTime += timer;
                     }
                     else
                     {
                         Debug.Log("Incorrect (Shapes are different)");
                         audioSource.PlayOneShot(incorrectSound);
+
+                        // Update overall stats
                         responseCount++;
                         totalResponseTime += timer;
+
+                        // Update level stats
+                        currentLevelStats.responseCount++;
+                        currentLevelStats.totalResponseTime += timer;
                     }
                     inputAccepted = false;
                     break;  // User pressed SPACE
@@ -308,6 +324,7 @@ public class GameLogic : MonoBehaviour
                     Debug.Log("Correct (Shapes are different)");
                     audioSource.PlayOneShot(correctSound);
                     correctResponses++;
+                    currentLevelStats.correctResponses++;
                 }
                 else
                 {
@@ -323,6 +340,7 @@ public class GameLogic : MonoBehaviour
 
             // Track chunk progress
             currentChunkTotal++;
+            currentLevelStats.totalTrials++;
             if ((responded && shapesAreSimilar) || (!responded && !shapesAreSimilar))
             {
                 currentChunkCorrect++;
@@ -332,6 +350,7 @@ public class GameLogic : MonoBehaviour
             if (currentChunkTotal >= chunkSize)
             {
                 EvaluateChunk();
+                currentLevelStats = GetOrCreateLevelStats((int)currentDistanceFromCenter, Mathf.RoundToInt(shapeScale / 0.005f));
                 currentChunkCorrect = 0;
                 currentChunkTotal = 0;
             }
@@ -614,6 +633,17 @@ public class GameLogic : MonoBehaviour
         }
     }
 
+    // A method that gets or creates LevelStats instance for given distance and scale
+    LevelStats GetOrCreateLevelStats(int distance, int scale)
+    {
+        string key = distance + "_" + scale;
+        if (!levelStatistics.ContainsKey(key))
+        {
+            levelStatistics[key] = new LevelStats { distance = distance, scale = scale };
+        }
+        return levelStatistics[key];
+    }
+
     void LogGameStatistics()
     {
         int totalTrials = totalSimilarPairs + totalNonSimilarPairs;
@@ -640,9 +670,21 @@ public class GameLogic : MonoBehaviour
         
         using (StreamWriter writer = new StreamWriter(csvPath, true))
         {
+            int d = 1;
+            int s = 10;
+            //Header row writing
             if (!fileExists)
             {
-                writer.WriteLine("ID,Test Time,Eye Trained,Test Duration (m),Focus Point Position,Focus Point Scale,Focus Point Shape,Set Display Duration (ms),Between Sets Duration (ms),Focus Point Change Mode,Focus Point Change Frequency (Intervals),Success Rate,Fail Rate,Chunk Size,Starting Distance,Starting Shape Scale,Overall Accuracy,Overall Average Response Time (s),Overall Trials,Overall Correct Responses");
+                string header = "ID,Test Time,Eye Trained,Test Duration (m),Focus Point Position,Focus Point Scale,Focus Point Shape,Set Display Duration (ms),Between Sets Duration (ms),Focus Point Change Mode,Focus Point Change Frequency (Intervals),Success Rate,Fail Rate,Chunk Size,Starting Distance,Starting Shape Scale,Overall Accuracy,Overall Average Response Time (s),Overall Trials,Overall Correct Responses";
+                for (int i = 0; i < 20; i++)
+                {
+                    header += $",D{d}S{s} Accuracy,D{d}S{s} Avg Response Time,D{d}S{s} Trials,D{d}S{s} Correct Responses";
+                    if (i % 2 == 0) 
+                        d++;
+                    else 
+                        s--;
+                }
+                writer.WriteLine(header);
             }
             
             string eyeText = loadedTrainingEye == 0 ? "Right" : "Left";
@@ -650,10 +692,51 @@ public class GameLogic : MonoBehaviour
             string focusChangeModeText = focusChangeMode == 0 ? "Fixed" : (focusChangeMode == 1 ? "Changes at fixed intervals" : "Changes Randomly");
             string intervalSetsText = focusChangeMode == 1 ? intervalSets.ToString() : "N/A";
 
-            writer.WriteLine($"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration / 60f},{loadedFocusY * 100f},{loadedFocusScale * 100f},{focusShapeText},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeModeText},{intervalSetsText},{successRate}%,{failRate}%,{chunkSize},{loadedStartingDistance},{Mathf.RoundToInt(loadedShapeScale / 0.005f)},{accuracy:F1}%,{avgResponseTime:F2},{totalTrials},{correctResponses}");
+            string dataLine = $"{loadedUserID},{loadedTimestamp},{eyeText},{gameDuration / 60f},{loadedFocusY * 100f},{loadedFocusScale * 100f},{focusShapeText},{shapeDisplayDuration},{betweenShapesDuration},{focusChangeModeText},{intervalSetsText},{successRate}%,{failRate}%,{chunkSize},{loadedStartingDistance},{Mathf.RoundToInt(loadedShapeScale / 0.005f)},{accuracy:F1}%,{avgResponseTime:F2},{totalTrials},{correctResponses}";
+            d = 1;
+            s = 10;
+            for (int i = 0; i < 20; i++)
+            {
+                string key = d + "_" + s;
+                if (levelStatistics.ContainsKey(key) && levelStatistics[key].totalTrials > 0)
+                {
+                    LevelStats stats = levelStatistics[key];
+                    dataLine += $",{stats.GetAccuracy():F1}%,{stats.GetAvgResponseTime():F2},{stats.totalTrials},{stats.correctResponses}";
+                }
+                else
+                {
+                    dataLine += ",,,,";
+                }
+                if (i % 2 == 0) 
+                    d++;
+                else 
+                    s--;
+            }
+            writer.WriteLine(dataLine);
         }
         
         Debug.Log("Results saved to CSV successfully");
+    }
+
+    [System.Serializable]
+    public class LevelStats
+    {
+        public int distance;
+        public int scale;
+        public int correctResponses = 0;
+        public int totalTrials = 0;
+        public float totalResponseTime = 0f;
+        public int responseCount = 0;
+        
+        public float GetAccuracy()
+        {
+            return totalTrials > 0 ? (float)correctResponses / totalTrials * 100f : 0f;
+        }
+        
+        public float GetAvgResponseTime()
+        {
+            return responseCount > 0 ? totalResponseTime / responseCount : 0f;
+        }
     }
 
     [System.Serializable]
