@@ -3,7 +3,11 @@ guid: 4dadac08d62dc407685c2973b9a07c1e
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - countdownText: {instanceID: 0}
+  - focusPoint: {instanceID: 0}
+  - correctSound: {fileID: 8300000, guid: dd0c2791b924848d887fcb956c431ca1, type: 3}
+  - incorrectSound: {fileID: 8300000, guid: 719d8954a3d84482eb45a425b8fafa32, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
