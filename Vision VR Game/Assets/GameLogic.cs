@@ -51,8 +51,7 @@ public class GameLogic : MonoBehaviour
     private int currentChunkTotal = 0;
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-10)
     private float shapeScale = 0.05f; // Scale of the shapes
-    private bool nextProgressionIsSize = false;
-
+    private bool nextProgressionIsSize = true;
 
     private int totalSimilarPairs = 0;
     private int totalNonSimilarPairs = 0;
