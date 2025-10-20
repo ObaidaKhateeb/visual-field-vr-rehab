@@ -69,15 +69,25 @@ public class CalibrationUI : MonoBehaviour
     public Button StartButton;
 
     // Results popup
-    public GameObject ResultsPanel;
+    public GameObject resultsPanel;
     public Text resultsUserIDText;
     public Text resultsTimestampText;
     public Text resultsEyeText;
+    public Text resultsLevelProgressionText;
     public Text resultsAccuracyText;
     public Text resultsAvgResponseTimeText;
     public Text resultsTrialsText;
     public Text resultsCorrectResponsesText;
     public Button resultsCloseButton;
+    public Button resultsExpandButton;
+    public Transform resultsLevelDetailsContent;
+    public Text resultsExpandButtonText;
+    public Text partialResultsLabel;
+    private Vector2 normalPopupOffsetMin = new Vector2(700, 400);
+    private Vector2 normalPopupOffsetMax = new Vector2(-700, -400);
+    private Vector2 expandedPopupOffsetMin = new Vector2(700, 350);
+    private Vector2 expandedPopupOffsetMax = new Vector2(-700, -350);
+    private bool isResultsExpanded = false;
 
     void Start()
     {
@@ -644,7 +654,7 @@ public class CalibrationUI : MonoBehaviour
         string json = File.ReadAllText(resultsPath);
         SessionResults results = JsonUtility.FromJson<SessionResults>(json);
         
-        if (ResultsPanel == null)
+        if (resultsPanel == null)
         {
             Debug.LogWarning("Results popup panel not assigned");
             File.Delete(resultsPath);
@@ -660,6 +670,9 @@ public class CalibrationUI : MonoBehaviour
         
         if (resultsEyeText != null)
             resultsEyeText.text = ":תנמואמ ןיע" + results.eyeTrained;
+
+        if (resultsLevelProgressionText != null)
+            resultsLevelProgressionText.text = ":םיבלשב תומדקתה" + results.levelProgression;
         
         if (resultsAccuracyText != null)
             resultsAccuracyText.text = ":קויד זוחא" + results.overallAccuracy.ToString("F1") + "%";
@@ -675,13 +688,133 @@ public class CalibrationUI : MonoBehaviour
         
         // Setup close button
         if (resultsCloseButton != null)
-            resultsCloseButton.onClick.AddListener(() => ResultsPanel.SetActive(false));
+            resultsCloseButton.onClick.AddListener(() => resultsPanel.SetActive(false));
+        
+
+        // Setup expand button
+        if (resultsExpandButton != null)
+        {
+            resultsExpandButton.onClick.RemoveAllListeners();
+            resultsExpandButton.onClick.AddListener(() => ToggleResultsExpansion(results));
+        }
+        
+        // Reset expansion state
+        isResultsExpanded = false;
+        RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
+        if (popupRect != null)
+        {
+            popupRect.offsetMin = normalPopupOffsetMin;
+            popupRect.offsetMax = normalPopupOffsetMax;
+        }
+
+        if (partialResultsLabel != null)
+            partialResultsLabel.gameObject.SetActive(false);  // Deactivate label
+        if (resultsLevelDetailsContent != null)
+            resultsLevelDetailsContent.parent.gameObject.SetActive(false);  // Deactivate ScrollView
         
         // Show the popup
-        ResultsPanel.SetActive(true);
+        resultsPanel.SetActive(true);
         
         // Delete the results file after displaying
         File.Delete(resultsPath);
+    }
+
+    void ToggleResultsExpansion(SessionResults results)
+    {
+        isResultsExpanded = !isResultsExpanded;
+        
+        RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
+        if (popupRect != null)
+        {
+            if (isResultsExpanded)
+            {
+                popupRect.offsetMin = expandedPopupOffsetMin;
+                popupRect.offsetMax = expandedPopupOffsetMax;
+            }
+            else
+            {
+                popupRect.offsetMin = normalPopupOffsetMin;
+                popupRect.offsetMax = normalPopupOffsetMax;
+            }
+        }
+        
+        if (partialResultsLabel != null)
+        {
+            partialResultsLabel.gameObject.SetActive(isResultsExpanded);  // Toggle label
+        }
+        if (resultsLevelDetailsContent != null)
+        {
+            resultsLevelDetailsContent.parent.gameObject.SetActive(isResultsExpanded);  // Toggle ScrollView
+        }
+        
+        if (resultsExpandButtonText != null)
+        {
+            resultsExpandButtonText.text = isResultsExpanded ? "כווץ" : "הרחב";
+        }
+        
+        if (isResultsExpanded)
+        {
+            DisplayLevelResults(results);
+        }
+    }
+    
+    void DisplayLevelResults(SessionResults results)
+    {
+        if (resultsLevelDetailsContent == null)
+            return;
+        
+        // Clear previous level results
+        foreach (Transform child in resultsLevelDetailsContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        if (results.levelResults == null || results.levelResults.Count == 0)
+        {
+            GameObject noDataObj = new GameObject("NoData");
+            noDataObj.transform.SetParent(resultsLevelDetailsContent, false);
+            
+            Text noDataText = noDataObj.AddComponent<Text>();
+            noDataText.text = "אין נתונים לפי רמות";
+            noDataText.color = Color.gray;
+            noDataText.fontSize = 14;
+            noDataText.alignment = TextAnchor.MiddleCenter;
+            noDataText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            
+            RectTransform rt = noDataObj.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(500, 30);
+            
+            return;
+        }
+        
+        int index = 0;
+        foreach (var levelResult in results.levelResults)
+        {
+            GameObject rowObj = new GameObject("LevelRow_" + levelResult.levelName);
+            rowObj.transform.SetParent(resultsLevelDetailsContent, false);
+            
+            RectTransform rowRect = rowObj.AddComponent<RectTransform>();
+            rowRect.anchorMin = new Vector2(0, 1);
+            rowRect.anchorMax = new Vector2(1, 1);
+            rowRect.pivot = new Vector2(0.5f, 1);
+            rowRect.sizeDelta = new Vector2(0, 25);
+            rowRect.anchoredPosition = new Vector2(0, -index * 30);
+            
+            Text rowText = rowObj.AddComponent<Text>();
+            rowText.text = $"{levelResult.levelName}: דיוק {levelResult.accuracy:F1}%, זמן {levelResult.avgResponseTime:F2}s, ניסיונות {levelResult.trials}, נכונות {levelResult.correctResponses}";
+            rowText.color = Color.black;
+            rowText.fontSize = 12;
+            rowText.alignment = TextAnchor.MiddleRight;
+            rowText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            
+            index++;
+        }
+        
+        RectTransform contentRect = resultsLevelDetailsContent.GetComponent<RectTransform>();
+        if (contentRect != null)
+        {
+            contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, index * 30);
+        }
     }
 }
 
@@ -719,8 +852,20 @@ public class SessionResults
     public string userID;
     public string sessionTimestamp;
     public string eyeTrained;
+    public string levelProgression;
     public float overallAccuracy;
     public float overallAvgResponseTime;
     public int totalTrials;
+    public int correctResponses;
+    public List<LevelResult> levelResults = new List<LevelResult>();
+}
+
+[System.Serializable]
+public class LevelResult
+{
+    public string levelName;
+    public float accuracy;
+    public float avgResponseTime;
+    public int trials;
     public int correctResponses;
 }

@@ -769,7 +769,8 @@ public class GameLogic : MonoBehaviour
             overallAccuracy = accuracy,
             overallAvgResponseTime = avgResponseTime,
             totalTrials = totalTrials,
-            correctResponses = correctResponses
+            correctResponses = correctResponses,
+            levelProgression = levelProgression
         };
 
         int d = 1;
@@ -874,6 +875,7 @@ public class GameLogic : MonoBehaviour
         public float overallAvgResponseTime;
         public int totalTrials;
         public int correctResponses;
+        public string levelProgression;
         public List<LevelResult> levelResults = new List<LevelResult>(); 
     }
 
