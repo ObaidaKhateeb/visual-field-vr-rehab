@@ -362,6 +362,13 @@ public class GameLogic : MonoBehaviour
 
             elapsedTime += Time.time - roundStartTime; //update elapsed time
         }
+        if (focusPoint != null)
+            focusPoint.gameObject.SetActive(false);
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(true);
+            countdownText.text = "םויס";
+        }
         LogGameStatistics();
     }
 

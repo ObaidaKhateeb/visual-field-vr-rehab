@@ -301,9 +301,9 @@ MonoBehaviour:
     m_Tooltip: 
   m_Pos:
     serializedVersion: 2
-    x: 277
+    x: 221
     y: 83
-    width: 610
+    width: 666
     height: 368
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -792,8 +792,8 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 165}
-      m_SelectedIDs: 785e0000
-      m_LastClickedID: 24184
+      m_SelectedIDs: 6c600000
+      m_LastClickedID: 24684
       m_ExpandedIDs: 30fbffff7c5d0000365f0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
@@ -898,18 +898,18 @@ MonoBehaviour:
       y: 21
       width: 666
       height: 347
-    m_Scale: {x: 0.75749105, y: 0.75749105}
-    m_Translation: {x: 301.05414, y: 185.41162}
+    m_Scale: {x: 0.6983089, y: 0.698309}
+    m_Translation: {x: 295.51395, y: 185.52208}
     m_MarginLeft: 0
     m_MarginRight: 0
     m_MarginTop: 0
     m_MarginBottom: 0
     m_LastShownAreaInsideMargins:
       serializedVersion: 2
-      x: -397.4359
-      y: -244.7707
-      width: 879.2183
-      height: 458.09122
+      x: -423.18515
+      y: -265.67334
+      width: 953.73267
+      height: 496.91467
     m_MinimalGUI: 1
   m_defaultScale: 0.3212963
   m_LastWindowPixelSize: {x: 666, y: 368}
@@ -1037,7 +1037,7 @@ MonoBehaviour:
   m_ListAreaState:
     m_SelectedInstanceIDs: 
     m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 0
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c6230000626500004c7c0000bade000000000000965e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
