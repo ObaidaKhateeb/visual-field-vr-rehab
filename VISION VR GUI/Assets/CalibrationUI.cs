@@ -89,6 +89,18 @@ public class CalibrationUI : MonoBehaviour
     private Vector2 expandedPopupOffsetMax = new Vector2(-700, -350);
     private bool isResultsExpanded = false;
 
+    // Results browser
+    public Button showResultsButton;
+    public GameObject resultsListPanel;
+    public Transform resultsListScrollContent;
+    public Button resultsListCancelButton;
+    public Button resultsListRemoveButton;
+    public Button resultsListExpandButton;
+
+    private List<GameResult> allGameResults = new List<GameResult>();
+    private GameObject selectedResultItem = null;
+    private int selectedResultIndex = -1;
+
     void Start()
     {
         //sliders text values 
@@ -115,7 +127,15 @@ public class CalibrationUI : MonoBehaviour
         //Start button
         StartButton.onClick.AddListener(SaveSettingsAndClose);
 
+        //Results list buttons
+        showResultsButton.onClick.AddListener(ShowResultsList);
+        resultsListCancelButton.onClick.AddListener(HideResultsList);
+        resultsListRemoveButton.onClick.AddListener(RemoveSelectedResult);
+        resultsListExpandButton.onClick.AddListener(ExpandSelectedResult);
+
+        //Focus point change
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
+
         OnFocusChangeDropdownChanged();
         // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
         // OnFocusColorChangeDropdownChanged();
@@ -816,6 +836,407 @@ public class CalibrationUI : MonoBehaviour
             contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, index * 30);
         }
     }
+
+    void ShowResultsList()
+    {
+        LoadGameResultsFromCSV();
+        DisplayResultsInList();
+        
+        // Show cancel, hide remove and expand
+        resultsListCancelButton.gameObject.SetActive(true);
+        resultsListRemoveButton.gameObject.SetActive(false);
+        resultsListExpandButton.gameObject.SetActive(false);
+        
+        selectedResultItem = null;
+        selectedResultIndex = -1;
+        
+        resultsListPanel.SetActive(true);
+    }
+
+    void HideResultsList()
+    {
+        resultsListPanel.SetActive(false);
+    }
+
+    void LoadGameResultsFromCSV()
+    {
+        allGameResults.Clear();
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "game_results.csv");
+        
+        if (!File.Exists(csvPath))
+        {
+            showMessage(".אצמנ אל תואצות ץבוק");
+            return;
+        }
+        
+        string[] lines = File.ReadAllLines(csvPath);
+        
+        // Skip header (line 0) and read data rows
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] fields = lines[i].Split(',');
+            
+            if (fields.Length < 24) continue; // Basic validation
+            
+            GameResult result = new GameResult
+            {
+                userID = fields[0],
+                timestamp = fields[1],
+                eyeTrained = fields[2],
+                testDuration = fields[3],
+                focusY = fields[4],
+                focusScale = fields[5],
+                focusShape = fields[6],
+                shapeDisplayDuration = fields[7],
+                betweenShapesDuration = fields[8],
+                focusChangeMode = fields[9],
+                intervalSets = fields[10],
+                successRate = fields[11],
+                failRate = fields[12],
+                chunkSize = fields[13],
+                startingDistance = fields[14],
+                startingShapeScale = fields[15],
+                overallAccuracy = fields[16],
+                overallAvgResponseTime = fields[17],
+                overallTrials = fields[18],
+                overallCorrectResponses = fields[19],
+                csvLineIndex = i
+            };
+            
+            // Parse level details (20 levels * 4 fields each = 80 fields)
+            int levelStartIndex = 20;
+            for (int j = 0; j < 20; j++)
+            {
+                int baseIdx = levelStartIndex + (j * 4);
+                if (baseIdx + 3 < fields.Length)
+                {
+                    result.levelAccuracies.Add(fields[baseIdx]);
+                    result.levelAvgResponseTimes.Add(fields[baseIdx + 1]);
+                    result.levelTrials.Add(fields[baseIdx + 2]);
+                    result.levelCorrectResponses.Add(fields[baseIdx + 3]);
+                }
+            }
+            
+            // Level progression is the last field
+            if (fields.Length > 100)
+                result.levelProgression = fields[fields.Length - 1];
+            
+            allGameResults.Add(result);
+        }
+    }
+
+    void DisplayResultsInList()
+    {
+        // Clear previous items
+        foreach (Transform child in resultsListScrollContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        if (allGameResults.Count == 0)
+        {
+            // Show "no results" message
+            GameObject noDataObj = new GameObject("NoResults");
+            noDataObj.transform.SetParent(resultsListScrollContent, false);
+            
+            Text noDataText = noDataObj.AddComponent<Text>();
+            noDataText.text = "תואצות ןיא";
+            noDataText.color = Color.gray;
+            noDataText.fontSize = 18;
+            noDataText.alignment = TextAnchor.MiddleCenter;
+            noDataText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            
+            RectTransform rt = noDataObj.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(700, 50);
+            
+            return;
+        }
+        
+        // Create a result item for each result
+        for (int i = 0; i < allGameResults.Count; i++)
+        {
+            CreateResultItem(allGameResults[i], i);
+        }
+        
+        // Update content size
+        RectTransform contentRect = resultsListScrollContent.GetComponent<RectTransform>();
+        if (contentRect != null)
+        {
+            contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, allGameResults.Count * 80);
+        }
+    }
+
+    void CreateResultItem(GameResult result, int index)
+    {
+        GameObject itemObj = new GameObject("ResultItem_" + index);
+        itemObj.transform.SetParent(resultsListScrollContent, false);
+        
+        RectTransform itemRect = itemObj.AddComponent<RectTransform>();
+        itemRect.anchorMin = new Vector2(0, 1);
+        itemRect.anchorMax = new Vector2(1, 1);
+        itemRect.pivot = new Vector2(0.5f, 1);
+        itemRect.sizeDelta = new Vector2(-20, 70);
+        itemRect.anchoredPosition = new Vector2(0, -index * 80);
+        
+        Image bgImage = itemObj.AddComponent<Image>();
+        bgImage.color = new Color(0.95f, 0.95f, 0.95f, 1f);
+        
+        Button itemButton = itemObj.AddComponent<Button>();
+        int capturedIndex = index;
+        itemButton.onClick.AddListener(() => OnResultItemClicked(itemObj, capturedIndex));
+        
+        // Main info text
+        GameObject infoObj = new GameObject("Info");
+        infoObj.transform.SetParent(itemObj.transform, false);
+        
+        RectTransform infoRect = infoObj.AddComponent<RectTransform>();
+        infoRect.anchorMin = Vector2.zero;
+        infoRect.anchorMax = Vector2.one;
+        infoRect.offsetMin = new Vector2(10, 5);
+        infoRect.offsetMax = new Vector2(-10, -5);
+        
+        Text infoText = infoObj.AddComponent<Text>();
+        infoText.text = $"ז.ת: {result.userID} | תאריכ: {result.timestamp}\n" +
+                        $"ןיע: {result.eyeTrained} | קויד: {result.overallAccuracy} | ןמז: {result.overallAvgResponseTime}";
+        infoText.color = Color.black;
+        infoText.fontSize = 14;
+        infoText.alignment = TextAnchor.MiddleRight;
+        infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+    }
+
+    void OnResultItemClicked(GameObject itemObj, int index)
+    {
+        // Deselect previous item
+        if (selectedResultItem != null && selectedResultItem != itemObj)
+        {
+            Image prevBg = selectedResultItem.GetComponent<Image>();
+            if (prevBg != null) prevBg.color = new Color(0.95f, 0.95f, 0.95f, 1f);
+        }
+        
+        // Select current item
+        selectedResultItem = itemObj;
+        selectedResultIndex = index;
+        
+        Image bg = itemObj.GetComponent<Image>();
+        if (bg != null) bg.color = new Color(0.8f, 0.9f, 1f, 1f);
+        
+        // Show remove and expand buttons
+        resultsListRemoveButton.gameObject.SetActive(true);
+        resultsListExpandButton.gameObject.SetActive(true);
+    }
+
+    void RemoveSelectedResult()
+    {
+        if (selectedResultIndex < 0 || selectedResultIndex >= allGameResults.Count)
+        {
+            showMessage(".הקיחמל טלפ רוחבל אנ");
+            return;
+        }
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "game_results.csv");
+        
+        if (!File.Exists(csvPath))
+        {
+            showMessage(".אצמנ אל תואצות ץבוק");
+            return;
+        }
+        
+        // Read all lines
+        List<string> lines = new List<string>(File.ReadAllLines(csvPath));
+        
+        // Remove the selected result line
+        int lineToRemove = allGameResults[selectedResultIndex].csvLineIndex;
+        if (lineToRemove < lines.Count)
+        {
+            lines.RemoveAt(lineToRemove);
+            
+            // Write back to file
+            File.WriteAllLines(csvPath, lines);
+            
+            showMessage(".קחמנ טלפה");
+            
+            // Refresh the display
+            LoadGameResultsFromCSV();
+            DisplayResultsInList();
+            
+            // Hide remove and expand buttons
+            resultsListRemoveButton.gameObject.SetActive(false);
+            resultsListExpandButton.gameObject.SetActive(false);
+            
+            selectedResultItem = null;
+            selectedResultIndex = -1;
+        }
+    }
+
+    void ExpandSelectedResult()
+    {
+        if (selectedResultIndex < 0 || selectedResultIndex >= allGameResults.Count)
+        {
+            showMessage(".הרחבל טלפ רוחבל אנ");
+            return;
+        }
+        
+        GameResult result = allGameResults[selectedResultIndex];
+        
+        // Populate the existing resultsPanel with this result's data
+        if (resultsPanel == null)
+        {
+            showMessage(".הרחב חולל ןיא");
+            return;
+        }
+        
+        // Fill in the basic info
+        if (resultsUserIDText != null)
+            resultsUserIDText.text = "ז.ת: " + result.userID;
+        
+        if (resultsTimestampText != null)
+            resultsTimestampText.text = "הקידבה ןמז: " + result.timestamp;
+        
+        if (resultsEyeText != null)
+            resultsEyeText.text = "תנמואמ ןיע: " + result.eyeTrained;
+        
+        if (resultsLevelProgressionText != null)
+            resultsLevelProgressionText.text = "םיבלשב תומדקתה: " + result.levelProgression;
+        
+        if (resultsAccuracyText != null)
+            resultsAccuracyText.text = "קויד זוחא: " + result.overallAccuracy;
+        
+        if (resultsAvgResponseTimeText != null)
+            resultsAvgResponseTimeText.text = "עצוממ הבוגת ןמז: " + result.overallAvgResponseTime;
+        
+        if (resultsTrialsText != null)
+            resultsTrialsText.text = "םיטס כהס: " + result.overallTrials;
+        
+        if (resultsCorrectResponsesText != null)
+            resultsCorrectResponsesText.text = "תונוכנ תובוגת כהס: " + result.overallCorrectResponses;
+        
+        // Setup close button
+        if (resultsCloseButton != null)
+        {
+            resultsCloseButton.onClick.RemoveAllListeners();
+            resultsCloseButton.onClick.AddListener(() => resultsPanel.SetActive(false));
+        }
+        
+        // Setup expand button for level details
+        if (resultsExpandButton != null)
+        {
+            resultsExpandButton.onClick.RemoveAllListeners();
+            resultsExpandButton.onClick.AddListener(() => ToggleExpandedResultView(result));
+        }
+        
+        // Reset expansion state
+        isResultsExpanded = false;
+        RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
+        if (popupRect != null)
+        {
+            popupRect.offsetMin = normalPopupOffsetMin;
+            popupRect.offsetMax = normalPopupOffsetMax;
+        }
+        
+        if (partialResultsLabel != null)
+            partialResultsLabel.gameObject.SetActive(false);
+        if (resultsLevelDetailsContent != null)
+            resultsLevelDetailsContent.parent.gameObject.SetActive(false);
+        
+        if (resultsExpandButtonText != null)
+            resultsExpandButtonText.text = "הרחב";
+        
+        // Hide the results list and show the details panel
+        resultsListPanel.SetActive(false);
+        resultsPanel.SetActive(true);
+    }
+
+    void ToggleExpandedResultView(GameResult result)
+    {
+        isResultsExpanded = !isResultsExpanded;
+        
+        RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
+        if (popupRect != null)
+        {
+            if (isResultsExpanded)
+            {
+                popupRect.offsetMin = expandedPopupOffsetMin;
+                popupRect.offsetMax = expandedPopupOffsetMax;
+            }
+            else
+            {
+                popupRect.offsetMin = normalPopupOffsetMin;
+                popupRect.offsetMax = normalPopupOffsetMax;
+            }
+        }
+        
+        if (partialResultsLabel != null)
+            partialResultsLabel.gameObject.SetActive(isResultsExpanded);
+        
+        if (resultsLevelDetailsContent != null)
+            resultsLevelDetailsContent.parent.gameObject.SetActive(isResultsExpanded);
+        
+        if (resultsExpandButtonText != null)
+            resultsExpandButtonText.text = isResultsExpanded ? "כווץ" : "הרחב";
+        
+        if (isResultsExpanded)
+        {
+            DisplayExpandedLevelDetails(result);
+        }
+    }
+
+    void DisplayExpandedLevelDetails(GameResult result)
+    {
+        if (resultsLevelDetailsContent == null) return;
+        
+        // Clear previous
+        foreach (Transform child in resultsLevelDetailsContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        int d = 1;
+        string sLevel = "L";
+        int displayedLevels = 0;
+        
+        for (int i = 0; i < 20; i++)
+        {
+            if (i < result.levelTrials.Count && !string.IsNullOrEmpty(result.levelTrials[i]))
+            {
+                GameObject rowObj = new GameObject("LevelRow_D" + d + sLevel);
+                rowObj.transform.SetParent(resultsLevelDetailsContent, false);
+                
+                RectTransform rowRect = rowObj.AddComponent<RectTransform>();
+                rowRect.anchorMin = new Vector2(0, 1);
+                rowRect.anchorMax = new Vector2(1, 1);
+                rowRect.pivot = new Vector2(0.5f, 1);
+                rowRect.sizeDelta = new Vector2(0, 25);
+                rowRect.anchoredPosition = new Vector2(0, -displayedLevels * 30);
+                
+                Text rowText = rowObj.AddComponent<Text>();
+                rowText.text = $"D{d}{sLevel}: דיוק {result.levelAccuracies[i]}, זמן {result.levelAvgResponseTimes[i]}, ניסיונות {result.levelTrials[i]}, נכונות {result.levelCorrectResponses[i]}";
+                rowText.color = Color.black;
+                rowText.fontSize = 12;
+                rowText.alignment = TextAnchor.MiddleRight;
+                rowText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                
+                displayedLevels++;
+            }
+            
+            if (sLevel == "L")
+                sLevel = "S";
+            else
+            {
+                sLevel = "L";
+                d++;
+            }
+        }
+        
+        RectTransform contentRect = resultsLevelDetailsContent.GetComponent<RectTransform>();
+        if (contentRect != null)
+        {
+            contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, displayedLevels * 30);
+        }
+    }
+
 }
 
 [System.Serializable]
@@ -868,4 +1289,39 @@ public class LevelResult
     public float avgResponseTime;
     public int trials;
     public int correctResponses;
+}
+
+[System.Serializable]
+public class GameResult
+{
+    public string userID;
+    public string timestamp;
+    public string eyeTrained;
+    public string testDuration;
+    public string focusY;
+    public string focusScale;
+    public string focusShape;
+    public string shapeDisplayDuration;
+    public string betweenShapesDuration;
+    public string focusChangeMode;
+    public string intervalSets;
+    public string successRate;
+    public string failRate;
+    public string chunkSize;
+    public string startingDistance;
+    public string startingShapeScale;
+    public string overallAccuracy;
+    public string overallAvgResponseTime;
+    public string overallTrials;
+    public string overallCorrectResponses;
+    
+    // Level details (20 levels: D1L, D1S, D2L... D10S)
+    public List<string> levelAccuracies = new List<string>();
+    public List<string> levelAvgResponseTimes = new List<string>();
+    public List<string> levelTrials = new List<string>();
+    public List<string> levelCorrectResponses = new List<string>();
+    
+    public string levelProgression;
+    
+    public int csvLineIndex; // To track which line in CSV this represents
 }
