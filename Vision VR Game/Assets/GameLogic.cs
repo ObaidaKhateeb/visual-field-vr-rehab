@@ -678,6 +678,8 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Overall Average Response Time: " + averageResponseTime.ToString("F1") + " seconds");
 
         SaveResultsToCSV(overallAccuracy, averageResponseTime, totalTrials);
+        SaveSessionResults(overallAccuracy, averageResponseTime, totalTrials);
+        LaunchGUIApplication();
     }
 
     void SaveResultsToCSV(float accuracy, float avgResponseTime, int totalTrials)
@@ -749,6 +751,76 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Results saved to CSV successfully");
     }
 
+    //A method that saves the Session results for GUI display
+    void SaveSessionResults(float accuracy, float avgResponseTime, int totalTrials)
+    {
+        string resultsFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        
+        if (!Directory.Exists(resultsFolder))
+            Directory.CreateDirectory(resultsFolder);
+        
+        string resultsPath = Path.Combine(resultsFolder, "current_session_results.json");
+        
+        SessionResults results = new SessionResults
+        {
+            userID = loadedUserID,
+            sessionTimestamp = loadedTimestamp,
+            eyeTrained = loadedTrainingEye == 0 ? "Right" : "Left",
+            overallAccuracy = accuracy,
+            overallAvgResponseTime = avgResponseTime,
+            totalTrials = totalTrials,
+            correctResponses = correctResponses
+        };
+
+        int d = 1;
+        string sLevel = "L";
+        for (int i = 0; i < 20; i++)
+        {
+            string key = d + "_" + sLevel;
+            if (levelStatistics.ContainsKey(key) && levelStatistics[key].totalTrials > 0)
+            {
+                LevelStats stats = levelStatistics[key];
+                results.levelResults.Add(new LevelResult
+                {
+                    levelName = "D" + d + sLevel,
+                    accuracy = stats.GetAccuracy(),
+                    avgResponseTime = stats.GetAvgResponseTime(),
+                    trials = stats.totalTrials,
+                    correctResponses = stats.correctResponses
+                });
+            }
+            
+            if (sLevel == "L") 
+                sLevel = "S";
+            else 
+            {
+                sLevel = "L";
+                d++;
+            }
+        }
+        
+        string json = JsonUtility.ToJson(results, true);
+        File.WriteAllText(resultsPath, json);
+        
+        Debug.Log("Session results saved for GUI display");
+    }
+    
+    //a method that launchs the GUI application
+    void LaunchGUIApplication()
+    {
+        string guiPath = Path.Combine(Application.dataPath, "..", "..", "GUI", "Build", "GUI.exe");
+        
+        if (File.Exists(guiPath))
+        {
+            System.Diagnostics.Process.Start(guiPath);
+            Debug.Log("GUI application launched");
+        }
+        else
+        {
+            Debug.LogWarning("GUI executable not found at: " + guiPath);
+        }
+    }
+
     [System.Serializable]
     public class LevelStats
     {
@@ -790,5 +862,28 @@ public class GameLogic : MonoBehaviour
         public string userID;
         public int trainingEye;
         public string sessionTimestamp;
+    }
+
+    [System.Serializable]
+    public class SessionResults
+    {
+        public string userID;
+        public string sessionTimestamp;
+        public string eyeTrained;
+        public float overallAccuracy;
+        public float overallAvgResponseTime;
+        public int totalTrials;
+        public int correctResponses;
+        public List<LevelResult> levelResults = new List<LevelResult>(); 
+    }
+
+    [System.Serializable]
+    public class LevelResult
+    {
+        public string levelName;
+        public float accuracy;
+        public float avgResponseTime;
+        public int trials;
+        public int correctResponses;
     }
 }

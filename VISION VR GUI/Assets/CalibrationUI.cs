@@ -68,6 +68,17 @@ public class CalibrationUI : MonoBehaviour
     public Dropdown EyeDropDown; // Right eye = 0, Left eye = 1
     public Button StartButton;
 
+    // Results popup
+    public GameObject ResultsPanel;
+    public Text resultsUserIDText;
+    public Text resultsTimestampText;
+    public Text resultsEyeText;
+    public Text resultsAccuracyText;
+    public Text resultsAvgResponseTimeText;
+    public Text resultsTrialsText;
+    public Text resultsCorrectResponsesText;
+    public Button resultsCloseButton;
+
     void Start()
     {
         //sliders text values 
@@ -98,6 +109,8 @@ public class CalibrationUI : MonoBehaviour
         OnFocusChangeDropdownChanged();
         // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
         // OnFocusColorChangeDropdownChanged();
+
+        CheckAndDisplaySessionResults();
     }
 
     void UpdateSliderValueDisplay()
@@ -619,6 +632,57 @@ public class CalibrationUI : MonoBehaviour
             writer.WriteLine($"{userID},{userName},{userAge},{genderText},{birthYear},{birthMonth},{birthDay},{eyeText},{currentTime},{currentTime}");
         }
     }
+
+    //A method to check for session results and display them
+    void CheckAndDisplaySessionResults()
+    {
+        string resultsPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "current_session_results.json");
+        
+        if (!File.Exists(resultsPath))
+            return;
+        
+        string json = File.ReadAllText(resultsPath);
+        SessionResults results = JsonUtility.FromJson<SessionResults>(json);
+        
+        if (ResultsPanel == null)
+        {
+            Debug.LogWarning("Results popup panel not assigned");
+            File.Delete(resultsPath);
+            return;
+        }
+        
+        // Populate results
+        if (resultsUserIDText != null)
+            resultsUserIDText.text = ":ז.ת" + results.userID;
+        
+        if (resultsTimestampText != null)
+            resultsTimestampText.text = ":הקידבה ןמז" + results.sessionTimestamp;
+        
+        if (resultsEyeText != null)
+            resultsEyeText.text = ":תנמואמ ןיע" + results.eyeTrained;
+        
+        if (resultsAccuracyText != null)
+            resultsAccuracyText.text = ":קויד זוחא" + results.overallAccuracy.ToString("F1") + "%";
+        
+        if (resultsAvgResponseTimeText != null)
+            resultsAvgResponseTimeText.text = ":עצוממ הבוגת ןמז" + results.overallAvgResponseTime.ToString("F2") + "s";
+        
+        if (resultsTrialsText != null)
+            resultsTrialsText.text = ":םיטס כהס" + results.totalTrials;
+        
+        if (resultsCorrectResponsesText != null)
+            resultsCorrectResponsesText.text = ":תונוכנ תובוגת כהס" + results.correctResponses;
+        
+        // Setup close button
+        if (resultsCloseButton != null)
+            resultsCloseButton.onClick.AddListener(() => ResultsPanel.SetActive(false));
+        
+        // Show the popup
+        ResultsPanel.SetActive(true);
+        
+        // Delete the results file after displaying
+        File.Delete(resultsPath);
+    }
 }
 
 [System.Serializable]
@@ -647,4 +711,16 @@ public class VRSettings
     public string userID;
     public int trainingEye; // 0 = Right eye, 1 = Left eye
     public string sessionTimestamp;
+}
+
+[System.Serializable]
+public class SessionResults
+{
+    public string userID;
+    public string sessionTimestamp;
+    public string eyeTrained;
+    public float overallAccuracy;
+    public float overallAvgResponseTime;
+    public int totalTrials;
+    public int correctResponses;
 }
