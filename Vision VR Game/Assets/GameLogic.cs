@@ -765,7 +765,7 @@ public class GameLogic : MonoBehaviour
         {
             userID = loadedUserID,
             sessionTimestamp = loadedTimestamp,
-            eyeTrained = loadedTrainingEye == 0 ? "Right" : "Left",
+            eyeTrained = loadedTrainingEye == 0 ? "ןימי" : "לאמש",
             overallAccuracy = accuracy,
             overallAvgResponseTime = avgResponseTime,
             totalTrials = totalTrials,
