@@ -73,6 +73,19 @@ public class CalibrationUI : MonoBehaviour
     public Text resultsUserIDText;
     public Text resultsTimestampText;
     public Text resultsEyeText;
+    public Text resultsTestDurationText;
+    public Text resultsFocusPositionText;
+    public Text resultsFocusScaleText;
+    public Text resultsFocusShapeText;
+    public Text resultsSetDisplayDurationText;
+    public Text resultsBetweenSetsDurationText;
+    public Text resultsFocusChangeModeText;
+    public Text resultsIntervalSetsText;
+    public Text resultsSuccessRateText;
+    public Text resultsFailRateText;
+    public Text resultsChunkSizeText;
+    public Text resultsStartingDistanceText;
+    public Text resultsStartingShapeScaleText;
     public Text resultsLevelProgressionText;
     public Text resultsAccuracyText;
     public Text resultsAvgResponseTimeText;
@@ -83,10 +96,10 @@ public class CalibrationUI : MonoBehaviour
     public Transform resultsLevelDetailsContent;
     public Text resultsExpandButtonText;
     public Text partialResultsLabel;
-    private Vector2 normalPopupOffsetMin = new Vector2(700, 400);
-    private Vector2 normalPopupOffsetMax = new Vector2(-700, -400);
-    private Vector2 expandedPopupOffsetMin = new Vector2(700, 350);
-    private Vector2 expandedPopupOffsetMax = new Vector2(-700, -350);
+    private Vector2 normalPopupOffsetMin = new Vector2(600, 350);
+    private Vector2 normalPopupOffsetMax = new Vector2(-600, -350);
+    private Vector2 expandedPopupOffsetMin = new Vector2(600, 300);
+    private Vector2 expandedPopupOffsetMax = new Vector2(-600, -300);
     private bool isResultsExpanded = false;
 
     // Results browser
@@ -1017,8 +1030,9 @@ public class CalibrationUI : MonoBehaviour
         infoRect.offsetMax = new Vector2(-10, 0);
 
         Text infoText = infoObj.AddComponent<Text>();
-        infoText.text = $"{result.eyeTrained} :ןיע | {result.userID} :ז.ת\n" +
-                        $"{result.overallTrials}/{result.overallCorrectResponses} :תובוגת | {result.overallAccuracy} :קויד | {result.overallAvgResponseTime} :ןמז";
+        string eyeDisplay = result.eyeTrained == "Right" ? "ןימי" : (result.eyeTrained == "Left" ? "לאמש" : result.eyeTrained);
+        infoText.text = $"{eyeDisplay} :ןיע | {result.userID} :ז.ת\n" +
+                        $"{result.overallTrials}/{result.overallCorrectResponses} :תובוגת | {result.overallAccuracy} :קויד זוחא | {result.overallAvgResponseTime} :הבוגת ןמז";
         infoText.color = Color.black;
         infoText.fontSize = 14;
         infoText.alignment = TextAnchor.MiddleRight;
@@ -1108,29 +1122,70 @@ public class CalibrationUI : MonoBehaviour
         }
         
         // Fill in the basic info
+        string eyeDisplay = result.eyeTrained == "Right" ? "ןימי" : (result.eyeTrained == "Left" ? "לאמש" : result.eyeTrained);
+
         if (resultsUserIDText != null)
-            resultsUserIDText.text = "ז.ת: " + result.userID;
-        
+            resultsUserIDText.text = result.userID + " <b>:ז.ת</b>";
+
         if (resultsTimestampText != null)
-            resultsTimestampText.text = "הקידבה ןמז: " + result.timestamp;
-        
+            resultsTimestampText.text = result.timestamp + " <b>:הקידבה ןמז</b>";
+
         if (resultsEyeText != null)
-            resultsEyeText.text = "תנמואמ ןיע: " + result.eyeTrained;
-        
+            resultsEyeText.text = eyeDisplay + " <b>:תנמואמ ןיע</b>";
+
+        if (resultsTestDurationText != null)
+            resultsTestDurationText.text = result.testDuration + " <b>:(תוקד) הקידבה ךשמ</b>";
+
+        if (resultsFocusPositionText != null)
+            resultsFocusPositionText.text = result.focusY + " <b>:דוקימ תדוקנ םוקימ</b>";
+
+        if (resultsFocusScaleText != null)
+            resultsFocusScaleText.text = result.focusScale + " <b>:דוקימ תדוקנ לדוג</b>";
+
+        if (resultsFocusShapeText != null)
+            resultsFocusShapeText.text = result.focusShape + " <b>:דוקימ תדוקנ תרוצ</b>";
+
+        if (resultsSetDisplayDurationText != null)
+            resultsSetDisplayDurationText.text = result.shapeDisplayDuration + " <b>:(ms) תונומת תגצה ךשמ</b>";
+
+        if (resultsBetweenSetsDurationText != null)
+            resultsBetweenSetsDurationText.text = result.betweenShapesDuration + " <b>:(ms) םיטס ןיב ךשמ</b>";
+
+        if (resultsFocusChangeModeText != null)
+            resultsFocusChangeModeText.text = result.focusChangeMode + " <b>:דוקימ תדוקנ יוניש בצמ</b>";
+
+        if (resultsIntervalSetsText != null)
+            resultsIntervalSetsText.text = result.intervalSets + " <b>:(םילווטרניא) יוניש תורידת</b>";
+
+        if (resultsSuccessRateText != null)
+            resultsSuccessRateText.text = result.successRate + " <b>:החלצה זוחא</b>";
+
+        if (resultsFailRateText != null)
+            resultsFailRateText.text = result.failRate + " <b>:הלשכ זוחא</b>";
+
+        if (resultsChunkSizeText != null)
+            resultsChunkSizeText.text = result.chunkSize + " <b>:הכורע לדוג</b>";
+
+        if (resultsStartingDistanceText != null)
+            resultsStartingDistanceText.text = result.startingDistance + " <b>:תלחתה קחרמ</b>";
+
+        if (resultsStartingShapeScaleText != null)
+            resultsStartingShapeScaleText.text = result.startingShapeScale + " <b>:תלחתה לדוג</b>";
+
         if (resultsLevelProgressionText != null)
-            resultsLevelProgressionText.text = "םיבלשב תומדקתה: " + result.levelProgression;
-        
+            resultsLevelProgressionText.text = result.levelProgression + " <b>:םיבלשב תומדקתה</b>";
+
         if (resultsAccuracyText != null)
-            resultsAccuracyText.text = "קויד זוחא: " + result.overallAccuracy;
-        
+            resultsAccuracyText.text = result.overallAccuracy + " <b>:קויד זוחא</b>";
+
         if (resultsAvgResponseTimeText != null)
-            resultsAvgResponseTimeText.text = "עצוממ הבוגת ןמז: " + result.overallAvgResponseTime;
-        
+            resultsAvgResponseTimeText.text = result.overallAvgResponseTime + " <b>:עצוממ הבוגת ןמז</b>";
+
         if (resultsTrialsText != null)
-            resultsTrialsText.text = "םיטס כהס: " + result.overallTrials;
-        
+            resultsTrialsText.text = result.overallTrials + " <b>:םיטס כהס</b>";
+
         if (resultsCorrectResponsesText != null)
-            resultsCorrectResponsesText.text = "תונוכנ תובוגת כהס: " + result.overallCorrectResponses;
+            resultsCorrectResponsesText.text = result.overallCorrectResponses + " <b>:תונוכנ תובוגת כהס</b>";
         
         // Setup close button
         if (resultsCloseButton != null)
@@ -1161,7 +1216,7 @@ public class CalibrationUI : MonoBehaviour
             resultsLevelDetailsContent.parent.gameObject.SetActive(false);
         
         if (resultsExpandButtonText != null)
-            resultsExpandButtonText.text = "הרחב";
+            resultsExpandButtonText.text = "בחרה";
         
         // Hide the results list and show the details panel
         resultsListPanel.SetActive(false);
@@ -1194,7 +1249,7 @@ public class CalibrationUI : MonoBehaviour
             resultsLevelDetailsContent.parent.gameObject.SetActive(isResultsExpanded);
         
         if (resultsExpandButtonText != null)
-            resultsExpandButtonText.text = isResultsExpanded ? "כווץ" : "הרחב";
+            resultsExpandButtonText.text = isResultsExpanded ? "ץווכ" : "בחרה";
         
         if (isResultsExpanded)
         {
