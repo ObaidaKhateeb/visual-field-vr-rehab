@@ -925,6 +925,7 @@ public class CalibrationUI : MonoBehaviour
             
             allGameResults.Add(result);
         }
+        allGameResults.Sort((a, b) => string.Compare(b.timestamp, a.timestamp)); // sort by timestamp
     }
 
     void DisplayResultsInList()
