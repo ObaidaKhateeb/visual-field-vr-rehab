@@ -987,18 +987,36 @@ public class CalibrationUI : MonoBehaviour
         int capturedIndex = index;
         itemButton.onClick.AddListener(() => OnResultItemClicked(itemObj, capturedIndex));
         
-        // Main info text
+        //Main info text (Date part)
+        GameObject dateObj = new GameObject("Date");
+        dateObj.transform.SetParent(itemObj.transform, false);
+
+        RectTransform dateRect = dateObj.AddComponent<RectTransform>();
+        dateRect.anchorMin = new Vector2(0, 1);
+        dateRect.anchorMax = new Vector2(0.5f, 1);
+        dateRect.pivot = new Vector2(0, 1);
+        dateRect.anchoredPosition = new Vector2(10, -5);
+        dateRect.sizeDelta = new Vector2(0, 25);
+
+        Text dateText = dateObj.AddComponent<Text>();
+        dateText.text = result.timestamp;
+        dateText.color = Color.black;
+        dateText.fontSize = 12;
+        dateText.alignment = TextAnchor.UpperLeft;
+        dateText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+        // Main info text (rest of the details)
         GameObject infoObj = new GameObject("Info");
         infoObj.transform.SetParent(itemObj.transform, false);
-        
+
         RectTransform infoRect = infoObj.AddComponent<RectTransform>();
-        infoRect.anchorMin = Vector2.zero;
-        infoRect.anchorMax = Vector2.one;
+        infoRect.anchorMin = new Vector2(0, 0);
+        infoRect.anchorMax = new Vector2(1, 0.7f);
         infoRect.offsetMin = new Vector2(10, 5);
-        infoRect.offsetMax = new Vector2(-10, -5);
-        
+        infoRect.offsetMax = new Vector2(-10, 0);
+
         Text infoText = infoObj.AddComponent<Text>();
-        infoText.text = $"ז.ת: {result.userID} | תאריכ: {result.timestamp}\n" +
+        infoText.text = $"ז.ת: {result.userID}\n" +
                         $"ןיע: {result.eyeTrained} | קויד: {result.overallAccuracy} | ןמז: {result.overallAvgResponseTime}";
         infoText.color = Color.black;
         infoText.fontSize = 14;

@@ -13,6 +13,7 @@ ScriptsOnlyBuild:
     - UnityEngine.EventSystems.StandaloneInputModule
     - UnityEngine.UI.Button
     - UnityEngine.UI.CanvasScaler
+    - UnityEngine.UI.ContentSizeFitter
     - UnityEngine.UI.Dropdown
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.Image
@@ -23,11 +24,13 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Slider
     - UnityEngine.UI.Text
     - UnityEngine.UI.Toggle
+    - UnityEngine.UI.VerticalLayoutGroup
   serializedClasses:
     UnityEngine.CoreModule:
     - UnityEngine.Events.ArgumentCache
     - UnityEngine.Events.PersistentCallGroup
     - UnityEngine.Events.PersistentListenerMode
+    - UnityEngine.RectOffset
     UnityEngine.UI:
     - UnityEngine.UI.AnimationTriggers
     - UnityEngine.UI.Button/ButtonClickedEvent
@@ -70,35 +73,39 @@ ScriptsOnlyBuild:
     - Class: 108
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 1580}
+      Script: {instanceID: 1574}
     - Class: 114
-      Script: {instanceID: 2586}
+      Script: {instanceID: 1922}
     - Class: 114
-      Script: {instanceID: 2790}
+      Script: {instanceID: 2584}
     - Class: 114
-      Script: {instanceID: 2838}
+      Script: {instanceID: 2788}
     - Class: 114
-      Script: {instanceID: 3090}
+      Script: {instanceID: 2836}
     - Class: 114
-      Script: {instanceID: 3830}
+      Script: {instanceID: 3092}
     - Class: 114
-      Script: {instanceID: 4886}
+      Script: {instanceID: 3256}
     - Class: 114
-      Script: {instanceID: 4934}
+      Script: {instanceID: 3834}
     - Class: 114
-      Script: {instanceID: 5256}
+      Script: {instanceID: 4894}
     - Class: 114
-      Script: {instanceID: 5560}
+      Script: {instanceID: 4942}
     - Class: 114
-      Script: {instanceID: 6040}
+      Script: {instanceID: 5264}
     - Class: 114
-      Script: {instanceID: 6048}
+      Script: {instanceID: 5570}
     - Class: 114
-      Script: {instanceID: 6798}
+      Script: {instanceID: 6050}
     - Class: 114
-      Script: {instanceID: 7080}
+      Script: {instanceID: 6058}
     - Class: 114
-      Script: {instanceID: 23894}
+      Script: {instanceID: 6456}
+    - Class: 114
+      Script: {instanceID: 6814}
+    - Class: 114
+      Script: {instanceID: 7096}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -170,6 +177,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnMouseExitMessageListener
+  - hash:
+      serializedVersion: 2
+      Hash: b2c52c445029cd4f0cbc5e6b8da34134
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: CalibrationUI
   - hash:
       serializedVersion: 2
       Hash: b12640dfdb5966813e9dd838893e6c4a
@@ -938,12 +951,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: 24f9ab0512c9594f6f1fcd4c45edd528
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: CalibrationUI
   platform: 2
   scenePathNames:
   - Assets/Scenes/SampleScene.unity
