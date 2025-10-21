@@ -680,77 +680,24 @@ public class CalibrationUI : MonoBehaviour
     //A method to check for session results and display them
     void CheckAndDisplaySessionResults()
     {
-        string resultsPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "current_session_results.json");
+        string flagPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "show_latest_result.flag");
         
-        if (!File.Exists(resultsPath))
+        // Only show results if flag file exists
+        if (!File.Exists(flagPath))
             return;
         
-        string json = File.ReadAllText(resultsPath);
-        SessionResults results = JsonUtility.FromJson<SessionResults>(json);
+        // Delete flag
+        File.Delete(flagPath);
         
-        if (resultsPanel == null)
-        {
-            Debug.LogWarning("Results popup panel not assigned");
-            File.Delete(resultsPath);
+        // Load results from CSV
+        LoadGameResultsFromCSV();
+        
+        if (allGameResults.Count == 0)
             return;
-        }
         
-        // Populate results
-        if (resultsUserIDText != null)
-            resultsUserIDText.text = ":ז.ת" + results.userID;
-        
-        if (resultsTimestampText != null)
-            resultsTimestampText.text = ":הקידבה ןמז" + results.sessionTimestamp;
-        
-        if (resultsEyeText != null)
-            resultsEyeText.text = ":תנמואמ ןיע" + results.eyeTrained;
-
-        if (resultsLevelProgressionText != null)
-            resultsLevelProgressionText.text = ":םיבלשב תומדקתה" + results.levelProgression;
-        
-        if (resultsAccuracyText != null)
-            resultsAccuracyText.text = ":קויד זוחא" + results.overallAccuracy.ToString("F1") + "%";
-        
-        if (resultsAvgResponseTimeText != null)
-            resultsAvgResponseTimeText.text = ":עצוממ הבוגת ןמז" + results.overallAvgResponseTime.ToString("F2") + "s";
-        
-        if (resultsTrialsText != null)
-            resultsTrialsText.text = ":םיטס כהס" + results.totalTrials;
-        
-        if (resultsCorrectResponsesText != null)
-            resultsCorrectResponsesText.text = ":תונוכנ תובוגת כהס" + results.correctResponses;
-        
-        // Setup close button
-        if (resultsCloseButton != null)
-            resultsCloseButton.onClick.AddListener(() => resultsPanel.SetActive(false));
-        
-
-        // Setup expand button
-        if (resultsExpandButton != null)
-        {
-            resultsExpandButton.onClick.RemoveAllListeners();
-            resultsExpandButton.onClick.AddListener(() => ToggleResultsExpansion(results));
-        }
-        
-        // Reset expansion state
-        isResultsExpanded = false;
-        RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
-        if (popupRect != null)
-        {
-            popupRect.offsetMin = normalPopupOffsetMin;
-            popupRect.offsetMax = normalPopupOffsetMax;
-        }
-
-        if (partialResultsLabel != null)
-            partialResultsLabel.gameObject.SetActive(false);  // Deactivate label
-        if (resultsLevelDetailsContent != null)
-            resultsLevelDetailsContent.parent.gameObject.SetActive(false);  // Deactivate ScrollView
-        
-        // Show the popup
-        resultsPanel.SetActive(true);
-        
-        // Delete the results file after displaying
-        File.Delete(resultsPath);
+        // Set the latest result as selected and expand it
+        selectedResultIndex = 0;
+        ExpandSelectedResult();
     }
 
     void ToggleResultsExpansion(SessionResults results)
