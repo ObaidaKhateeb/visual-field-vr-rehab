@@ -96,6 +96,7 @@ public class CalibrationUI : MonoBehaviour
     public Transform resultsLevelDetailsContent;
     public Text resultsExpandButtonText;
     public Text partialResultsLabel;
+    public GameObject partialResultsScrollView;
     private Vector2 normalPopupOffsetMin = new Vector2(600, 350);
     private Vector2 normalPopupOffsetMax = new Vector2(-600, -350);
     private Vector2 expandedPopupOffsetMin = new Vector2(600, 300);
@@ -778,6 +779,7 @@ public class CalibrationUI : MonoBehaviour
         if (resultsLevelDetailsContent != null)
         {
             resultsLevelDetailsContent.parent.gameObject.SetActive(isResultsExpanded);  // Toggle ScrollView
+            partialResultsScrollView.SetActive(isResultsExpanded);
         }
         
         if (resultsExpandButtonText != null)
@@ -1247,6 +1249,7 @@ public class CalibrationUI : MonoBehaviour
         
         if (resultsLevelDetailsContent != null)
             resultsLevelDetailsContent.parent.gameObject.SetActive(isResultsExpanded);
+            partialResultsScrollView.SetActive(isResultsExpanded);
         
         if (resultsExpandButtonText != null)
             resultsExpandButtonText.text = isResultsExpanded ? "ץווכ" : "בחרה";
