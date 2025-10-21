@@ -1016,8 +1016,8 @@ public class CalibrationUI : MonoBehaviour
         infoRect.offsetMax = new Vector2(-10, 0);
 
         Text infoText = infoObj.AddComponent<Text>();
-        infoText.text = $"ז.ת: {result.userID}\n" +
-                        $"ןיע: {result.eyeTrained} | קויד: {result.overallAccuracy} | ןמז: {result.overallAvgResponseTime}";
+        infoText.text = $"{result.eyeTrained} :ןיע | {result.userID} :ז.ת\n" +
+                        $"{result.overallTrials}/{result.overallCorrectResponses} :תובוגת | {result.overallAccuracy} :קויד | {result.overallAvgResponseTime} :ןמז";
         infoText.color = Color.black;
         infoText.fontSize = 14;
         infoText.alignment = TextAnchor.MiddleRight;
