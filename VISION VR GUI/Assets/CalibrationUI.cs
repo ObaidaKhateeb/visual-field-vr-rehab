@@ -87,6 +87,8 @@ public class CalibrationUI : MonoBehaviour
     public Text resultsStartingDistanceText;
     public Text resultsStartingShapeScaleText;
     public Text resultsLevelProgressionText;
+    public GameObject resultsLevelProgressionScrollView;
+    public Text resultsLevelProgressionScrollText;
     public Text resultsAccuracyText;
     public Text resultsAvgResponseTimeText;
     public Text resultsTrialsText;
@@ -1110,7 +1112,7 @@ public class CalibrationUI : MonoBehaviour
             resultsSuccessRateText.text = result.successRate + " <b>:החלצה זוחא</b>";
 
         if (resultsFailRateText != null)
-            resultsFailRateText.text = result.failRate + " <b>:הלשכ זוחא</b>";
+            resultsFailRateText.text = result.failRate + " <b>:ןולשכ זוחא</b>";
 
         if (resultsChunkSizeText != null)
             resultsChunkSizeText.text = result.chunkSize + " <b>:הכורע לדוג</b>";
@@ -1122,7 +1124,127 @@ public class CalibrationUI : MonoBehaviour
             resultsStartingShapeScaleText.text = result.startingShapeScale + " <b>:תלחתה לדוג</b>";
 
         if (resultsLevelProgressionText != null)
-            resultsLevelProgressionText.text = result.levelProgression + " <b>:םיבלשב תומדקתה</b>";
+        {
+            // CREATE TEXT IN SCROLLVIEW IF IT DOESN'T EXIST
+            if (resultsLevelProgressionScrollText == null && resultsLevelProgressionScrollView != null)
+            {
+                Transform viewport = resultsLevelProgressionScrollView.transform.Find("Viewport");
+                if (viewport != null)
+                {
+                    Transform content = viewport.Find("Content");
+                    if (content != null)
+                    {
+                        // Make Content VERY WIDE so it can scroll horizontally
+                        RectTransform contentRT = content.GetComponent<RectTransform>();
+                        contentRT.sizeDelta = new Vector2(3000, contentRT.sizeDelta.y);
+                        contentRT.pivot = new Vector2(1f, 0.5f);
+                        contentRT.anchorMin = new Vector2(1f, 0f);
+                        contentRT.anchorMax = new Vector2(1f, 1f);
+                        // contentRT.anchoredPosition = Vector2.zero;
+                        
+                        // Create Text GameObject
+                        GameObject textObj = new GameObject("ProgressionScrollText");
+                        textObj.transform.SetParent(content, false);
+                        
+                        Text text = textObj.AddComponent<Text>();
+                        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                        text.fontSize = 14;
+                        text.alignment = TextAnchor.MiddleRight;
+                        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                        text.verticalOverflow = VerticalWrapMode.Truncate;
+                        text.color = Color.black;
+                        
+                        RectTransform rt = textObj.GetComponent<RectTransform>();
+                        rt.anchorMin = Vector2.zero;
+                        rt.anchorMax = Vector2.one;
+                        rt.offsetMin = Vector2.zero;
+                        rt.offsetMax = Vector2.zero;
+                        
+                        resultsLevelProgressionScrollText = text;
+                    }
+                }
+            }
+            
+            // PARSE AND TRANSFORM PROGRESSION
+            float startDist = float.Parse(result.startingDistance);
+            float startScale = float.Parse(result.startingShapeScale);
+            
+            string[] progressionSteps = result.levelProgression.Split(' ');
+            System.Array.Reverse(progressionSteps);
+            string transformedProgression = "";
+            
+            foreach (string step in progressionSteps)
+            {
+                string trimmedStep = step.Trim();
+                string action = "";
+                string color = "white";
+                
+                if (trimmedStep.StartsWith("Start"))
+                {
+                    action = "הלחתה";
+                    color = "white";
+                }
+                else if (trimmedStep.StartsWith("Up"))
+                {
+                    action = "הילע";
+                    color = "green";
+                }
+                else if (trimmedStep.StartsWith("Down"))
+                {
+                    action = "הדירי";
+                    color = "red";
+                }
+                else if (trimmedStep.StartsWith("Same"))
+                {
+                    action = "תועיבק";
+                    color = "white";
+                }
+                
+                int startIdx = trimmedStep.IndexOf('D');
+                int endIdx = trimmedStep.IndexOf(')');
+                if (startIdx != -1 && endIdx != -1)
+                {
+                    string levelInfo = trimmedStep.Substring(startIdx + 1, endIdx - startIdx - 1);
+                    string sizeLevel = levelInfo.Substring(levelInfo.Length - 1);
+                    int d = int.Parse(levelInfo.Substring(0, levelInfo.Length - 1));
+                    
+                    int sizeValue;
+                    if (sizeLevel == "L")
+                        sizeValue = d - (int)(startDist - startScale);
+                    else
+                        sizeValue = d - (int)(startDist - startScale) - 1;
+                    
+                    string transformedStep = $"<color={color}>({sizeValue} לדוג , {d} קחרמ)<b>{action}</b></color>";
+                    
+                    if (transformedProgression.Length > 0)
+                        transformedProgression += " , ";
+                    transformedProgression += transformedStep;
+                }
+            }
+            
+            // IF MORE THAN 100 STEPS: USE SCROLLVIEW
+            if (progressionSteps.Length > 4)
+            {
+                // Show only label in the normal text field
+                resultsLevelProgressionText.text = "<b>:םיבלשב תומדקתה</b>";
+                
+                // Show content in scrollview
+                resultsLevelProgressionScrollView.SetActive(true);
+                if (resultsLevelProgressionScrollText != null)
+                {
+                    resultsLevelProgressionScrollText.text = transformedProgression;
+                }
+            }
+            // IF 10 OR LESS: USE NORMAL TEXT
+            else
+            {
+                // Show everything in normal text field
+                resultsLevelProgressionText.text = transformedProgression + " <b>:םיבלשב תומדקתה</b>";
+                
+                // Hide scrollview
+                resultsLevelProgressionScrollView.SetActive(false);
+            }
+        }
 
         if (resultsAccuracyText != null)
             resultsAccuracyText.text = result.overallAccuracy + " <b>:קויד זוחא</b>";
@@ -1236,7 +1358,14 @@ public class CalibrationUI : MonoBehaviour
                 rowRect.anchoredPosition = new Vector2(0, -displayedLevels * 30);
                 
                 Text rowText = rowObj.AddComponent<Text>();
-                rowText.text = $"D{d}{sLevel}: דיוק {result.levelAccuracies[i]}, זמן {result.levelAvgResponseTimes[i]}, ניסיונות {result.levelTrials[i]}, נכונות {result.levelCorrectResponses[i]}";
+                float startDist = float.Parse(result.startingDistance);
+                float startScale = float.Parse(result.startingShapeScale);
+                int sizeValue;
+                if (sLevel == "L")
+                    sizeValue = d - (int)(startDist - startScale);
+                else
+                    sizeValue = d - (int)(startDist - startScale) - 1;
+                rowText.text = $"{result.levelAccuracies[i]} :קויד זוחא, {result.levelAvgResponseTimes[i]} :הבוגת ןמז, {result.levelCorrectResponses[i]}/{result.levelTrials[i]} :<b>{sizeValue} לדוג , {d} קחרמ  </b>";
                 rowText.color = Color.black;
                 rowText.fontSize = 12;
                 rowText.alignment = TextAnchor.MiddleRight;
@@ -1260,6 +1389,8 @@ public class CalibrationUI : MonoBehaviour
             contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, displayedLevels * 30);
         }
     }
+
+
 
 }
 

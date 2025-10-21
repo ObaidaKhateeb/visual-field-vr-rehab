@@ -556,7 +556,7 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
                     Debug.Log("Level UP! Shape size decreased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = false; // Next time change distance
-                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else if (currentDistanceFromCenter < 10f)
                 {
@@ -564,12 +564,12 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Size at minimum, distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = false; // Next time still try size first
-                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
-                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
             }
             else
@@ -580,7 +580,7 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = true; // Next time change size
-                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else if (shapeScale > 0.005f)
                 {
@@ -588,12 +588,12 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
                     Debug.Log("Level UP! Distance at maximum, size decreased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = true; // Next time still try distance first
-                    levelProgression += $",Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
-                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
             }
         }
@@ -608,7 +608,7 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
                     Debug.Log("Level DOWN! Shape size increased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = false; // Next time change distance
-                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else if (currentDistanceFromCenter > 1f)
                 {
@@ -616,12 +616,12 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
                     Debug.Log("Level DOWN! Size at maximum, distance decreased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = false; // Next time still try size first
-                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else
                 {
                     Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
-                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
             }
             else
@@ -632,7 +632,7 @@ public class GameLogic : MonoBehaviour
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
                     Debug.Log("Level DOWN! Distance decreased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = true; // Next time change size
-                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else if (shapeScale < 0.05f)
                 {
@@ -640,19 +640,19 @@ public class GameLogic : MonoBehaviour
                     shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
                     Debug.Log("Level DOWN! Distance at minimum, size increased to: " + (shapeScale / 0.005f));
                     nextProgressionIsSize = true; // Next time still try distance first
-                    levelProgression += $",Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
                 else
                 {
                     Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
-                    levelProgression += $",Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
             }
         }
         else
         {
             Debug.Log("Level maintained. Current: distance=" + currentDistanceFromCenter + ", size=" + (shapeScale / 0.005f));
-            levelProgression += $",Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+            levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
         }
     }
 

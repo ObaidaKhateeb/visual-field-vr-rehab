@@ -21784,7 +21784,8 @@ MonoBehaviour:
   resultsExpandButton: {fileID: 1715451120}
   resultsLevelDetailsContent: {fileID: 516728521}
   resultsExpandButtonText: {fileID: 316905526}
-  partialResultsLabel: {fileID: 0}
+  partialResultsLabel: {fileID: 933567369}
+  partialResultsScrollView: {fileID: 1183596442}
   showResultsButton: {fileID: 1687309321}
   resultsListPanel: {fileID: 143221689}
   resultsListScrollContent: {fileID: 1522985435}
