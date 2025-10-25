@@ -67,6 +67,7 @@ public class CalibrationUI : MonoBehaviour
     public Dropdown DateDayDropDown;
     public Dropdown EyeDropDown; // Right eye = 0, Left eye = 1
     public Button StartButton;
+    public Button InfoPreviousButton;
 
     // Results popup
     public GameObject resultsPanel;
@@ -142,6 +143,9 @@ public class CalibrationUI : MonoBehaviour
 
         //Start button
         StartButton.onClick.AddListener(SaveSettingsAndClose);
+
+        //InfoPannel Previous button
+        InfoPreviousButton.onClick.AddListener(ReturnToUIPanel);
 
         //Results list buttons
         showResultsButton.onClick.AddListener(ShowResultsList);
@@ -574,6 +578,13 @@ public class CalibrationUI : MonoBehaviour
        SaveUserDetailsToCSV(userName, userID, age, GenderDropdown.value, DateYearDropDown.value, DateMonthDropDown.value, DateDayDropDown.value, EyeDropDown.value, timestamp);
        Application.Quit();
    }
+
+    //A listener function connected to "InfoPreviousButton". It returns to the main UI panel from the info panel
+   void ReturnToUIPanel()
+    {
+        infoPannel.SetActive(false);
+        uiPanel.SetActive(true);
+    }
 
     public void OnFocusChangeDropdownChanged()
     {
@@ -1290,7 +1301,6 @@ public class CalibrationUI : MonoBehaviour
             resultsExpandButtonText.text = "בחרה";
         
         // Hide the results list and show the details panel
-        resultsListPanel.SetActive(false);
         resultsPanel.SetActive(true);
     }
 
