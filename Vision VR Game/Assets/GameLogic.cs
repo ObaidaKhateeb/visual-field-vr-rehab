@@ -17,6 +17,8 @@ public class GameLogic : MonoBehaviour
     public List<GameObject> imageSet8 = new List<GameObject>();
     public List<GameObject> imageSet9 = new List<GameObject>();
     public List<GameObject> imageSet10 = new List<GameObject>();
+    public List<GameObject> imageSet11 = new List<GameObject>();
+
     public List<GameObject> shapePrefabs; //will be set to the chosen set
     private List<List<GameObject>> activeImageSets = new List<List<GameObject>>();
 
@@ -121,6 +123,9 @@ public class GameLogic : MonoBehaviour
         }
     }
 
+    
+
+
     //a function responsible for settings the chosen set of images 
     void SetActiveImageSets(List<int> setNumbers)
     {
@@ -140,6 +145,8 @@ public class GameLogic : MonoBehaviour
                 case 8: activeImageSets.Add(imageSet8); break;
                 case 9: activeImageSets.Add(imageSet9); break;
                 case 10: activeImageSets.Add(imageSet10); break;
+                case 11: activeImageSets.Add(imageSet11); break;
+
                 default: 
                     Debug.LogWarning("Invalid image set number: " + setNumber);
                     break;
@@ -159,6 +166,7 @@ public class GameLogic : MonoBehaviour
             activeImageSets.Add(imageSet8);
             activeImageSets.Add(imageSet9);
             activeImageSets.Add(imageSet10);
+            activeImageSets.Add(imageSet11);
             Debug.LogWarning("No image sets selected, using all image sets as default");
         }
     }
@@ -528,6 +536,11 @@ public class GameLogic : MonoBehaviour
         rightShape.transform.localScale = Vector3.one * shapeScale;
         leftShape.transform.localScale = Vector3.one * shapeScale;
 
+
+        // נשתמש ב-shapeScale כ"מכפיל קושי" בלבד ביחס לערך המקסימלי שלך (0.05f בקוד)
+        float sizeMultiplier = shapeScale / 0.05f;
+
+       
         //make shapes face user
         rightShape.transform.LookAt(cam);
         leftShape.transform.LookAt(cam);
