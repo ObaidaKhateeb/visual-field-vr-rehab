@@ -583,7 +583,10 @@ public class CalibrationUI : MonoBehaviour
 
         // Saving the settings
        string json = JsonUtility.ToJson(settings, true);
-       string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
+       string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+       if (!Directory.Exists(csvFolder))
+            Directory.CreateDirectory(csvFolder);
+       string path = Path.Combine(csvFolder, "vr_settings.json");
        File.WriteAllText(path, json);
        
        SaveUserDetailsToCSV(userName, userID, age, GenderDropdown.value, DateYearDropDown.value, DateMonthDropDown.value, DateDayDropDown.value, EyeDropDown.value, timestamp);

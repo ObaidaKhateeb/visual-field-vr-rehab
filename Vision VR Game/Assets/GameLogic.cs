@@ -82,7 +82,7 @@ public class GameLogic : MonoBehaviour
 
     void LoadSettings()
     {
-        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "vr_settings.json");
+        string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "vr_settings.json");
         if (File.Exists(path))
         {
             string json = File.ReadAllText(path);
