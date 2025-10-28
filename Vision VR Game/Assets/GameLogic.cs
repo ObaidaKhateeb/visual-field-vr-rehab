@@ -50,6 +50,7 @@ public class GameLogic : MonoBehaviour
     private int currentChunkCorrect = 0;
     private int currentChunkTotal = 0;
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-10)
+    private float maxDistanceFromCenter = 10f; // Maximum distance from center
     private float shapeScale = 0.05f; // Scale of the shapes
     private bool nextProgressionIsSize = true;
 
@@ -92,6 +93,7 @@ public class GameLogic : MonoBehaviour
             shapeDisplayDuration = settings.shapeDisplayDuration;
             betweenShapesDuration = settings.betweenShapesDuration;
             currentDistanceFromCenter = settings.startingDistance;
+            maxDistanceFromCenter = settings.maxDistance;
             shapeScale = settings.shapeScale;
             loadedFocusShape = settings.focusShape;
             loadedFocusY = settings.focusY;
@@ -558,10 +560,10 @@ public class GameLogic : MonoBehaviour
                     nextProgressionIsSize = false; // Next time change distance
                     levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
                 }
-                else if (currentDistanceFromCenter < 10f)
+                else if (currentDistanceFromCenter < maxDistanceFromCenter)
                 {
                     // Size at minimum, try distance instead
-                    currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
+                    currentDistanceFromCenter = Mathf.Min(maxDistanceFromCenter, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Size at minimum, distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = false; // Next time still try size first
                     levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
@@ -575,9 +577,9 @@ public class GameLogic : MonoBehaviour
             else
             {
                 // Try to increase distance
-                if (currentDistanceFromCenter < 10f)
+                if (currentDistanceFromCenter < maxDistanceFromCenter)
                 {
-                    currentDistanceFromCenter = Mathf.Min(10f, currentDistanceFromCenter + 1f);
+                    currentDistanceFromCenter = Mathf.Min(maxDistanceFromCenter, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
                     nextProgressionIsSize = true; // Next time change size
                     levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
@@ -801,6 +803,7 @@ public class GameLogic : MonoBehaviour
         public int focusChangeMode;
         public int intervalSets;
         public float startingDistance = 1f;
+        public float maxDistance = 10f;
         public float shapeScale = 0.05f;
         public float successRate = 80f;
         public float failRate = 20f;

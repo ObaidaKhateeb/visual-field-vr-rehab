@@ -11,6 +11,8 @@ public class CalibrationUI : MonoBehaviour
    public InputField betweenShapesDuration; //Duration between sets in seconds 
    public Slider startingDistanceSlider; // starting distance of the shape from the focus point
    public Text startingDistanceValueText; // Display value of startingDistanceSlider
+   public Slider maxDistanceSlider; // maximum distance can be reached in the game
+   public Text maxDistanceValueText; // Display value of maxDistanceSlider
    public Slider shapeSizeSlider; // Size of the shapes
    public Text shapeSizeValueText; // Display value of shapeSizeSlider
 
@@ -122,10 +124,13 @@ public class CalibrationUI : MonoBehaviour
     {
         //sliders text values 
         startingDistanceSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        startingDistanceSlider.onValueChanged.AddListener(delegate { UpdateMaxDistanceRange(); });
+        maxDistanceSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         shapeSizeSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         focusYSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         focusScaleSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         UpdateSliderValueDisplay(); //initial display
+        UpdateMaxDistanceRange();
 
         saveConfigButton.onClick.AddListener(ShowSaveDialog);
         loadConfigButton.onClick.AddListener(ShowLoadDialog);
@@ -167,6 +172,9 @@ public class CalibrationUI : MonoBehaviour
     {
         if (startingDistanceValueText != null)
             startingDistanceValueText.text = startingDistanceSlider.value.ToString();
+
+        if (maxDistanceValueText != null)
+            maxDistanceValueText.text = maxDistanceSlider.value.ToString();
         
         if (shapeSizeValueText != null)
             shapeSizeValueText.text = shapeSizeSlider.value.ToString();
@@ -176,6 +184,17 @@ public class CalibrationUI : MonoBehaviour
 
         if (focusScaleValueText != null)
             focusScaleValueText.text = focusScaleSlider.value.ToString();
+    }
+
+    void UpdateMaxDistanceRange()
+    {
+        float startingDist = startingDistanceSlider.value;
+        maxDistanceSlider.minValue = startingDist;
+        maxDistanceSlider.maxValue = 10f;
+        
+        //Ensuring current value is within new range
+        if (maxDistanceSlider.value < startingDist)
+            maxDistanceSlider.value = startingDist;
     }
 
     //A function that shows the save configuration dialog
@@ -218,6 +237,7 @@ public class CalibrationUI : MonoBehaviour
             settings.shapeDisplayDuration = duration;
             
         settings.startingDistance = startingDistanceSlider.value;
+        settings.maxDistance = maxDistanceSlider.value;
         settings.shapeScale = shapeSizeSlider.value * 0.005f;
 
         // Focus point settings
@@ -408,6 +428,8 @@ public class CalibrationUI : MonoBehaviour
             
             // Load sliders
             startingDistanceSlider.value = settings.startingDistance;
+            maxDistanceSlider.value = settings.maxDistance;
+            UpdateMaxDistanceRange();
             shapeSizeSlider.value = settings.shapeScale / 0.005f;
             focusYSlider.value = settings.focusY * 100f;
             focusScaleSlider.value = settings.focusScale * 100f;
@@ -529,6 +551,7 @@ public class CalibrationUI : MonoBehaviour
            settings.shapeDisplayDuration = duration; 
         
         settings.startingDistance = startingDistanceSlider.value;
+        settings.maxDistance = maxDistanceSlider.value;
         settings.shapeScale = shapeSizeSlider.value * 0.005f;
 
 
@@ -1416,6 +1439,7 @@ public class VRSettings
     public int focusChangeMode;
     public int intervalSets;
     public float startingDistance = 1f;
+    public float maxDistance = 10f;
     public float shapeScale = 0.05f;
     public float successRate = 80f;
     public float failRate = 20f;
