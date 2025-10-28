@@ -272,8 +272,7 @@ public class CalibrationUI : MonoBehaviour
 
         // Save to config folder
         string json = JsonUtility.ToJson(settings, true);
-        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
-        
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "Configs");        
         if (!Directory.Exists(configFolder))
             Directory.CreateDirectory(configFolder);
         
@@ -294,21 +293,13 @@ public class CalibrationUI : MonoBehaviour
             Destroy(child.gameObject);
         }
         
-        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
-        
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "Configs");        
         if (!Directory.Exists(configFolder))
         {
-            showMessage(".הרתוא אל תורדגהה תייקית");
-            return;
+            Directory.CreateDirectory(configFolder);
         }
         
         string[] configFiles = Directory.GetFiles(configFolder, "*.json");
-        
-        if (configFiles.Length == 0)
-        {
-            Debug.Log("No saved configurations found");
-            return;
-        }
         
         // Create a button for each config file
         int index = 0;
@@ -413,8 +404,7 @@ public class CalibrationUI : MonoBehaviour
             return;
         }
         
-        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
-        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "Configs");        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
         
         if (File.Exists(path))
         {
@@ -474,8 +464,7 @@ public class CalibrationUI : MonoBehaviour
             return;
         }
         
-        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRConfigs");
-        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
+        string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "Configs");        string path = Path.Combine(configFolder, selectedConfigToLoad + ".json");
         
         if (File.Exists(path))
         {
