@@ -55,6 +55,10 @@ public class GameLogic : MonoBehaviour
     private float shapeScale = 0.05f; // Scale of the shapes
     private bool nextProgressionIsSize = true;
 
+    private bool isShapesSetSelected = false; //track if shapes set has been selected
+    private bool isInShapesPhase = true; //track if in shapes phase
+    private List<int> otherSetsSelected = new List<int>(); //Images sets selected 
+
     private int totalSimilarPairs = 0;
     private int totalNonSimilarPairs = 0;
     private int correctResponses = 0;
@@ -128,25 +132,48 @@ public class GameLogic : MonoBehaviour
     void SetActiveImageSets(List<int> setNumbers)
     {
         activeImageSets.Clear(); // Clear any previous selections
-        
+        otherSetsSelected.Clear();
+        isShapesSetSelected = false;
+
         foreach(int setNumber in setNumbers)
         {
-            switch(setNumber)
+            if (setNumber == 11)
             {
-                case 1: activeImageSets.Add(imageSet1); break;
-                case 2: activeImageSets.Add(imageSet2); break;
-                case 3: activeImageSets.Add(imageSet3); break;
-                case 4: activeImageSets.Add(imageSet4); break;
-                case 5: activeImageSets.Add(imageSet5); break;
-                case 6: activeImageSets.Add(imageSet6); break;
-                case 7: activeImageSets.Add(imageSet7); break;
-                case 8: activeImageSets.Add(imageSet8); break;
-                case 9: activeImageSets.Add(imageSet9); break;
-                case 10: activeImageSets.Add(imageSet10); break;
-                case 11: activeImageSets.Add(imageSet11); break;
-                default: 
-                    Debug.LogWarning("Invalid image set number: " + setNumber);
-                    break;
+                isShapesSetSelected = true;
+            }
+            else if (setNumber >= 1 && setNumber <= 10)
+            {
+                otherSetsSelected.Add(setNumber);
+            }
+        }
+
+        if (isShapesSetSelected)
+        {
+            activeImageSets.Add(imageSet11);
+            isInShapesPhase = true;
+            Debug.Log("Starting with Shapes Set (Set 11) only");
+        }
+        else 
+        {
+            isInShapesPhase = false;
+            foreach(int setNumber in otherSetsSelected)
+            {
+                switch(setNumber)
+                {
+                    case 1: activeImageSets.Add(imageSet1); break;
+                    case 2: activeImageSets.Add(imageSet2); break;
+                    case 3: activeImageSets.Add(imageSet3); break;
+                    case 4: activeImageSets.Add(imageSet4); break;
+                    case 5: activeImageSets.Add(imageSet5); break;
+                    case 6: activeImageSets.Add(imageSet6); break;
+                    case 7: activeImageSets.Add(imageSet7); break;
+                    case 8: activeImageSets.Add(imageSet8); break;
+                    case 9: activeImageSets.Add(imageSet9); break;
+                    case 10: activeImageSets.Add(imageSet10); break;
+                    default: 
+                        Debug.LogWarning("Invalid image set number: " + setNumber);
+                        break;
+                }
             }
         }
         
@@ -166,6 +193,49 @@ public class GameLogic : MonoBehaviour
             activeImageSets.Add(imageSet11);
             Debug.LogWarning("No image sets selected, using all image sets as default");
         }
+    }
+
+    void SwitchToOtherSets()
+    {
+        if (otherSetsSelected.Count == 0)
+        {
+            Debug.Log("No other sets available. Game will end.");
+            return;
+        }
+        
+        Debug.Log("Maximum level reached with Shapes Set! Switching to other sets and restarting from beginning.");
+        
+        // Clear current active sets
+        activeImageSets.Clear();
+        
+        // Add other sets (1-10)
+        foreach(int setNumber in otherSetsSelected)
+        {
+            switch(setNumber)
+            {
+                case 1: activeImageSets.Add(imageSet1); break;
+                case 2: activeImageSets.Add(imageSet2); break;
+                case 3: activeImageSets.Add(imageSet3); break;
+                case 4: activeImageSets.Add(imageSet4); break;
+                case 5: activeImageSets.Add(imageSet5); break;
+                case 6: activeImageSets.Add(imageSet6); break;
+                case 7: activeImageSets.Add(imageSet7); break;
+                case 8: activeImageSets.Add(imageSet8); break;
+                case 9: activeImageSets.Add(imageSet9); break;
+                case 10: activeImageSets.Add(imageSet10); break;
+            }
+        }
+        
+        // Reset to starting difficulty
+        currentDistanceFromCenter = loadedStartingDistance;
+        shapeScale = loadedShapeScale;
+        nextProgressionIsSize = true;
+        isInShapesPhase = false;
+        
+        // Update level stats
+        string currentSizeLevel = nextProgressionIsSize ? "L" : "S";
+        currentLevelStats = GetOrCreateLevelStats((int)currentDistanceFromCenter, currentSizeLevel);
+        levelProgression += $" | Restart(D{(int)currentDistanceFromCenter}{currentSizeLevel})";
     }
 
     void ApplyFocusSettings(VRSettings settings)
@@ -575,6 +645,27 @@ public class GameLogic : MonoBehaviour
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+
+                    if (isInShapesPhase && otherSetsSelected.Count > 0)
+                    {
+                        // Switch to other sets
+                        SwitchToOtherSets();
+                    }
+                    else if (isInShapesPhase && otherSetsSelected.Count == 0)
+                    {
+                        // End game - shapes phase with no other sets
+                        Debug.Log("Maximum level reached with shapes set and no other sets! Ending game...");
+                        if (focusPoint != null)
+                            focusPoint.gameObject.SetActive(false);
+                        if (countdownText != null)
+                        {
+                            countdownText.gameObject.SetActive(true);
+                            countdownText.text = "!הבר הנכהו - םייתסה קחשמה";
+                        }
+                        LogGameStatistics();
+                        StopAllCoroutines();
+                        return;
+                    }
                 }
             }
             else
@@ -599,6 +690,27 @@ public class GameLogic : MonoBehaviour
                 {
                     Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    
+                    if (isInShapesPhase && otherSetsSelected.Count > 0)
+                    {
+                        // Switch to other sets
+                        SwitchToOtherSets();
+                    }
+                    else if (isInShapesPhase && otherSetsSelected.Count == 0)
+                    {
+                        // End game - shapes phase with no other sets
+                        Debug.Log("Maximum level reached with shapes set and no other sets! Ending game...");
+                        if (focusPoint != null)
+                            focusPoint.gameObject.SetActive(false);
+                        if (countdownText != null)
+                        {
+                            countdownText.gameObject.SetActive(true);
+                            countdownText.text = "!הבר הנכהו - םייתסה קחשמה";
+                        }
+                        LogGameStatistics();
+                        StopAllCoroutines();
+                        return;
+                    }
                 }
             }
         }
