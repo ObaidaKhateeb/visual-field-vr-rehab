@@ -512,8 +512,7 @@ public class CalibrationUI : MonoBehaviour
 
         if (string.IsNullOrEmpty(userName))
         {
-            showMessage(".לופטמה םש תא ןיזהל אנ");
-            return;
+            userName = "N/A";
         }
 
         if (string.IsNullOrEmpty(userID))
@@ -522,10 +521,10 @@ public class CalibrationUI : MonoBehaviour
             return;
         }
 
-        if (string.IsNullOrEmpty(userAge) || !int.TryParse(userAge, out int age))
+        int age;
+        if (string.IsNullOrEmpty(userAge) || !int.TryParse(userAge, out age))
         {
-            showMessage(".ןיקת ליג ןיזהל אנ");
-            return;
+            age = -1;
         }
 
        VRSettings settings = new VRSettings();
@@ -676,9 +675,10 @@ public class CalibrationUI : MonoBehaviour
                         
                         //Updating the other details
                         string genderText = userGender == 0 ? "Male" : "Female";
+                        string ageText = userAge == -1 ? "N/A" : userAge.ToString();
                         string firstAdded = fields[8]; 
                         string lastUpdate = timestamp;
-                        existingLines[i] = $"{userID},{userName},{userAge},{genderText},{birthYear},{birthMonth},{birthDay},{newEyeText},{firstAdded},{lastUpdate}";
+                        existingLines[i] = $"{userID},{userName},{ageText},{genderText},{birthYear},{birthMonth},{birthDay},{newEyeText},{firstAdded},{lastUpdate}";
                         
                         File.WriteAllLines(csvPath, existingLines);
                     }
@@ -695,10 +695,11 @@ public class CalibrationUI : MonoBehaviour
                 writer.WriteLine("ID,Name,Age,Gender,BirthYear,BirthMonth,BirthDay,EyeTrained,FirstAdded,LastUpdate");
             }
             string genderText = userGender == 0 ? "Male" : "Female";
+            string ageText = userAge == -1 ? "N/A" : userAge.ToString();
             string eyeText = trainingEye == 0 ? "Right" : "Left";
             string currentTime = timestamp;
 
-            writer.WriteLine($"{userID},{userName},{userAge},{genderText},{birthYear},{birthMonth},{birthDay},{eyeText},{currentTime},{currentTime}");
+            writer.WriteLine($"{userID},{userName},{ageText},{genderText},{birthYear},{birthMonth},{birthDay},{eyeText},{currentTime},{currentTime}");
         }
     }
 
