@@ -1,0 +1,8 @@
+# Vision VR GUI - Python Requirements
+# Python 3.7+ required
+
+# The GUI uses tkinter which is included with Python standard library
+# No external dependencies are required
+
+# Optional: For better UI experience on some systems
+# pillow>=9.0.0  # For enhanced image support (if needed in future)

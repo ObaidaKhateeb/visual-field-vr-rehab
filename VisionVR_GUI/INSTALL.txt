@@ -1,0 +1,55 @@
+================================================================================
+Vision VR Calibration GUI - Python Version
+================================================================================
+
+INSTALLATION INSTRUCTIONS
+--------------------------
+
+1. VERIFY PYTHON
+   - You need Python 3.7 or higher
+   - Check version: python --version  (or python3 --version)
+   - Download from: https://www.python.org/downloads/
+
+2. VERIFY INSTALLATION
+   Run the verification script:
+   
+   Linux/macOS:
+     python3 verify_installation.py
+   
+   Windows:
+     python verify_installation.py
+
+3. RUN THE GUI
+
+   Linux/macOS:
+     ./run_gui.sh
+     or
+     python3 vr_calibration_gui.py
+   
+   Windows:
+     run_gui.bat
+     or
+     python vr_calibration_gui.py
+
+4. TROUBLESHOOTING
+
+   If tkinter is missing on Linux:
+   
+   Ubuntu/Debian:
+     sudo apt-get install python3-tk
+   
+   Fedora:
+     sudo dnf install python3-tkinter
+   
+   Arch:
+     sudo pacman -S tk
+
+5. DOCUMENTATION
+
+   - README.md           - Complete documentation
+   - QUICK_START.md      - Quick reference guide
+   - CONVERSION_NOTES.md - Technical details
+
+================================================================================
+For more help, see README.md
+================================================================================
