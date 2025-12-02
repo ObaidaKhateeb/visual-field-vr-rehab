@@ -65,7 +65,7 @@ public class GameLogic : MonoBehaviour
     private float totalResponseTime = 0f;
     private int responseCount = 0;
     private Dictionary<string, LevelStats> levelStatistics = new Dictionary<string, LevelStats>(); // level statistics dictionary
-    private LevelStats currentLevelStats; // current level statistics
+    private LevelStats currentLevelStats; //current level statistics
     private string levelProgression = "";
 
     private int loadedFocusShape;
@@ -85,6 +85,7 @@ public class GameLogic : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
+    //A method to load settings selected from JSON file
     void LoadSettings()
     {
         string path = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "vr_settings.json");
@@ -93,7 +94,7 @@ public class GameLogic : MonoBehaviour
             string json = File.ReadAllText(path);
             VRSettings settings = JsonUtility.FromJson<VRSettings>(json);
             
-            // Durations: game, set display, and between sets.
+            //Durations: game, set display, and between sets.
             gameDuration = settings.gameDuration;
             shapeDisplayDuration = settings.shapeDisplayDuration;
             betweenShapesDuration = settings.betweenShapesDuration;
@@ -131,7 +132,7 @@ public class GameLogic : MonoBehaviour
     //a function responsible for settings the chosen set of images 
     void SetActiveImageSets(List<int> setNumbers)
     {
-        activeImageSets.Clear(); // Clear any previous selections
+        activeImageSets.Clear(); //Clear any previous selections
         otherSetsSelected.Clear();
         isShapesSetSelected = false;
 
@@ -195,6 +196,7 @@ public class GameLogic : MonoBehaviour
         }
     }
 
+    //A method to switch from shapes set to other sets when max level is reached
     void SwitchToOtherSets()
     {
         if (otherSetsSelected.Count == 0)
@@ -205,10 +207,10 @@ public class GameLogic : MonoBehaviour
         
         Debug.Log("Maximum level reached with Shapes Set! Switching to other sets and restarting from beginning.");
         
-        // Clear current active sets
+        //Clear current active sets
         activeImageSets.Clear();
         
-        // Add other sets (1-10)
+        //Add other sets (1-10)
         foreach(int setNumber in otherSetsSelected)
         {
             switch(setNumber)
@@ -226,18 +228,19 @@ public class GameLogic : MonoBehaviour
             }
         }
         
-        // Reset to starting difficulty
+        //Reset to starting difficulty
         currentDistanceFromCenter = loadedStartingDistance;
         shapeScale = loadedShapeScale;
         nextProgressionIsSize = true;
         isInShapesPhase = false;
         
-        // Update level stats
+        //Update level stats
         string currentSizeLevel = nextProgressionIsSize ? "L" : "S";
         currentLevelStats = GetOrCreateLevelStats((int)currentDistanceFromCenter, currentSizeLevel);
         levelProgression += $" | Restart(D{(int)currentDistanceFromCenter}{currentSizeLevel})";
     }
 
+    //A method to apply focus point settings from loaded JSON
     void ApplyFocusSettings(VRSettings settings)
     {
         // Find both focus point GameObjects
@@ -246,20 +249,20 @@ public class GameLogic : MonoBehaviour
         
         if (focusCircle != null && focusCross != null)
         {
-            if (settings.focusShape == 0) // Circle
+            if (settings.focusShape == 0) //Circle
             {
                 focusCircle.SetActive(true);
                 focusCross.SetActive(false);
                 focusPoint = focusCircle.transform;
             }
-            else // Cross
+            else //Cross
             {
                 focusCircle.SetActive(false);
                 focusCross.SetActive(true);
                 focusPoint = focusCross.transform;
             }
             
-            // Scale and position of focus point
+            //Scale and position of focus point
             Vector3 pos = focusPoint.localPosition;
             focusPoint.localPosition = new Vector3(pos.x, settings.focusY, pos.z);
             focusPoint.localScale = Vector3.one * settings.focusScale;
@@ -277,7 +280,7 @@ public class GameLogic : MonoBehaviour
         ResetSetCounter();
     }
 
-    //Reset the set counter and determine how many sets until the next focus change
+    //A function taht resets the set counter and determine how many sets until the next focus change
     void ResetSetCounter()
     {        
         if (focusChangeMode == 1) // Interval
@@ -286,7 +289,7 @@ public class GameLogic : MonoBehaviour
             setsUntilChange = Random.Range(1, 11);
     }
 
-    //Chnge the focus point position randomly along the Y-axis
+    //A function that changes the focus point position randomly along the Y-axis
     void ChangeFocusPoint()
     {
         Vector3 newPos = focusPoint.localPosition;
@@ -296,6 +299,7 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Focus point changed to: " + newPos);
     }
 
+    // Coroutine to run the trials
     IEnumerator RunTrials()
     {
         yield return new WaitForSeconds(3f); //Wait 3 seconds before starting
@@ -331,7 +335,7 @@ public class GameLogic : MonoBehaviour
         {
             float roundStartTime = Time.time; //round start time 
             
-            // Changing focus point position logic 
+            //Changing focus point position logic 
             setsUntilChange--; 
             if (focusChangeMode != 0 && setsUntilChange <= 0 && !waitingForFocusChange)
             {
@@ -342,14 +346,14 @@ public class GameLogic : MonoBehaviour
                 waitingForFocusChange = false;
             }
 
-            // Shapes choosing and showing
+            //Shapes choosing and showing
             SpawnShapes();
-            // shapes hide 
+            //shapes hide 
             StartCoroutine(HideShapesAfterDelay(shapeDisplayDuration/1000f));
             inputAccepted = true;
             bool responded = false;
 
-            // Wait for up to 2 seconds or betweenShapesDuration time for user to press SPACE
+            //Wait for up to 2 seconds or betweenShapesDuration time for user to press SPACE
             float maxResponseTime = Mathf.Min(2f, betweenShapesDuration/1000f);
             float timer = 0f;
             while (timer < maxResponseTime)
@@ -362,12 +366,12 @@ public class GameLogic : MonoBehaviour
                         Debug.Log("Correct (Shapes are similar)");
                         audioSource.PlayOneShot(correctSound);
 
-                        // Update overall stats
+                        //Update overall stats
                         correctResponses++;
                         responseCount++;
                         totalResponseTime += timer;
 
-                        // Update level stats
+                        //Update level stats
                         currentLevelStats.correctResponses++;
                         currentLevelStats.responseCount++;
                         currentLevelStats.totalResponseTime += timer;
@@ -377,16 +381,16 @@ public class GameLogic : MonoBehaviour
                         Debug.Log("Incorrect (Shapes are different)");
                         audioSource.PlayOneShot(incorrectSound);
 
-                        // Update overall stats
+                        //Update overall stats
                         responseCount++;
                         totalResponseTime += timer;
 
-                        // Update level stats
+                        //Update level stats
                         currentLevelStats.responseCount++;
                         currentLevelStats.totalResponseTime += timer;
                     }
                     inputAccepted = false;
-                    break;  // User pressed SPACE
+                    break;  //User pressed SPACE
                 }
 
                 timer += Time.deltaTime;
@@ -415,7 +419,7 @@ public class GameLogic : MonoBehaviour
             Destroy(rightShape);
             inputAccepted = false;
 
-            // Track chunk progress
+            //Track chunk progress
             currentChunkTotal++;
             currentLevelStats.totalTrials++;
             if ((responded && shapesAreSimilar) || (!responded && !shapesAreSimilar))
@@ -423,7 +427,7 @@ public class GameLogic : MonoBehaviour
                 currentChunkCorrect++;
             }
             
-            // Check if chunk is complete
+            //Check if chunk is complete
             if (currentChunkTotal >= chunkSize)
             {
                 EvaluateChunk();
@@ -448,103 +452,6 @@ public class GameLogic : MonoBehaviour
         LogGameStatistics();
     }
 
-    // IEnumerator RunTrials()
-    // {
-    //     float elapsedTime = 0f;
-    //     while (elapsedTime < gameDuration)
-    //     {
-    //         float roundStartTime = Time.time; //round start time 
-
-    //         // Changing focus point position logic 
-    //         setsUntilChange--; 
-    //         if (focusChangeMode != 0 && setsUntilChange <= 0 && !waitingForFocusChange)
-    //         {
-    //             waitingForFocusChange = true;
-    //             ChangeFocusPoint();
-    //             yield return new WaitForSeconds(1f); //wait 1 second after changing
-    //             ResetSetCounter();
-    //             waitingForFocusChange = false;
-    //         }
-
-    //         // Shapes choosing and showing
-    //         SpawnShapes();
-    //         // shapes hide 
-    //         StartCoroutine(HideShapesAfterDelay(shapeDisplayDuration/1000f));
-    //         inputAccepted = true;
-    //         bool responded = false;
-
-    //         // Wait for up to 2 seconds or betweenShapesDuration time for user to press SPACE
-    //         float maxResponseTime = Mathf.Min(2f, betweenShapesDuration/1000f);
-    //         float timer = 0f;
-    //         while (timer < maxResponseTime)
-    //         {
-    //             if (!inputAccepted)
-    //             {
-    //                 responded = true;
-    //                 if (shapesAreSimilar)
-    //                 {
-    //                     totalResponseTime += timer;
-    //                     responseCount++;
-    //                 }
-    //                 break;  // User pressed SPACE
-    //             }
-
-    //             timer += Time.deltaTime;
-    //             yield return null;
-    //         }
-
-    //         //Evaluate non-response if SPACE wasn't pressed
-    //         if (!responded)
-    //         {
-    //             if (!shapesAreSimilar)
-    //             {
-    //                 Debug.Log("Correct (Shapes are different)");
-    //                 audioSource.PlayOneShot(correctSound);
-    //                 consecutiveCorrect++;
-    //                 consecutiveIncorrect = 0;
-    //                 correctResponses++;
-    //             }
-    //             else
-    //             {
-    //                 Debug.Log("Incorrect (Shapes are similar)");
-    //                 audioSource.PlayOneShot(incorrectSound);
-    //                 consecutiveIncorrect++;
-    //                 consecutiveCorrect = 0;
-    //                 incorrectResponses++;
-    //             }
-    //         }
-
-    //         //Clean up
-    //         Destroy(leftShape);
-    //         Destroy(rightShape);
-    //         inputAccepted = false;
-
-    //         // Track chunk progress
-    //         currentChunkTotal++;
-    //         if (responded && shapesAreSimilar) // correctly responded to similar shapes
-    //         {
-    //             currentChunkCorrect++;
-    //         }
-    //         else if (!responded && !shapesAreSimilar) //correctly didn't responded to non-similar shapes
-    //         {
-    //             currentChunkCorrect++;
-    //         }
-
-    //         // Check if chunk is complete
-    //         if (currentChunkTotal >= chunkSize)
-    //         {
-    //             EvaluateChunk();
-    //             currentChunkCorrect = 0;
-    //             currentChunkTotal = 0;
-    //         }
-
-    //         yield return new WaitForSeconds(betweenShapesDuration / 1000f);
-
-    //         elapsedTime += Time.time - roundStartTime; //update elapsed time
-    //     }
-    //     LogGameStatistics();
-    // }
-
     // Coroutine to hide shapes after a delay
     IEnumerator HideShapesAfterDelay(float delay)
     {
@@ -553,20 +460,14 @@ public class GameLogic : MonoBehaviour
         if (rightShape != null && rightShape != leftShape) Destroy(rightShape);
     }
 
+    // A method to spawn shapes
     void SpawnShapes()
     {
-        // Get camera transform
+        //Get camera transform
         Transform cam = Camera.main.transform;
-
-        // Position relative to camera
-        // Vector3 center = cam.position + cam.forward * shapeDistance;
-        // Vector3 rightPos = center + cam.right * sideOffset;
-        // Vector3 leftPos = center - cam.right * sideOffset;
 
         //Position relative to focus point
         Vector3 center = focusPoint.position + focusPoint.forward * shapeDistance;
-
-        // Screen percentage: level 1 = 15% from center, level 10 = 45% from center
         float screenPercent = 0.3f + ((currentDistanceFromCenter - 1f) / 9f) * 0.8f;
 
         Camera mainCamera = cam.GetComponent<Camera>();
@@ -576,15 +477,15 @@ public class GameLogic : MonoBehaviour
         Vector3 rightPos = center + focusPoint.right * horizontalOffset;
         Vector3 leftPos = center - focusPoint.right * horizontalOffset;
 
-        // Choose a random image set from the active sets
+        //Choose a random image set from the active sets
         int setIndex = Random.Range(0, activeImageSets.Count);
         List<GameObject> chosenSet = activeImageSets[setIndex];
 
-        // Choose right shape from that set
+        //Choose right shape from that set
         int rightIndex = Random.Range(0, chosenSet.Count);
         GameObject right = chosenSet[rightIndex];
 
-        // 50% chance to match
+        //50% chance to match
         bool same = Random.value < 0.5f;
         GameObject left;
         if (same)
@@ -593,7 +494,7 @@ public class GameLogic : MonoBehaviour
         }
         else
         {
-            // Pick a different shape from the SAME set
+            //Pick a different shape from the SAME set
             int leftIndex;
             do
             {
@@ -604,11 +505,11 @@ public class GameLogic : MonoBehaviour
 
         shapesAreSimilar = same;
 
-        // Instantiate
+        //Instantiate
         rightShape = Instantiate(right, rightPos, Quaternion.identity);
         leftShape = Instantiate(left, leftPos, Quaternion.identity);
 
-        // Apply scale to shapes
+        //Apply scale to shapes
         rightShape.transform.localScale = Vector3.one * shapeScale;
         leftShape.transform.localScale = Vector3.one * shapeScale;
 
@@ -622,7 +523,7 @@ public class GameLogic : MonoBehaviour
             totalNonSimilarPairs++;
     }
 
-
+    //A method that allows exiting the game when 'escape' is pressed
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -631,6 +532,7 @@ public class GameLogic : MonoBehaviour
         }
     }
 
+    //A method that evaluates chunk accuracy and adjusts difficulty accordingly
     void EvaluateChunk()
     {
         float accuracy = (float)currentChunkCorrect / currentChunkTotal * 100f;
@@ -639,10 +541,8 @@ public class GameLogic : MonoBehaviour
 
         if (accuracy >= successRate)
         {
-            // Level UP - strict zig-zag alternation between size and distance
             if (nextProgressionIsSize)
             {
-                // SIZE's turn: Try to decrease size (make shapes smaller/harder)
                 if (shapeScale > 0.004f)
                 {
                     shapeScale = Mathf.Max(0.004f, shapeScale - 0.0036f);
@@ -654,32 +554,28 @@ public class GameLogic : MonoBehaviour
                     Debug.Log("Level UP! Size already at minimum, staying at current level");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}L)";
                 }
-                nextProgressionIsSize = false; // Next time it's distance's turn
+                nextProgressionIsSize = false;
             }
             else
             {
-                // DISTANCE's turn: Try to increase distance
                 if (currentDistanceFromCenter < maxDistanceFromCenter)
                 {
                     currentDistanceFromCenter = Mathf.Min(maxDistanceFromCenter, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
                     levelProgression += $" Up(D{(int)currentDistanceFromCenter}S)";
-                    nextProgressionIsSize = true; // Next time it's size's turn
+                    nextProgressionIsSize = true;
                 }
                 else
                 {
-                    // Distance at maximum on distance's turn - END GAME or SWITCH
                     Debug.Log("Level UP! Distance at maximum on distance's turn");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}S)";
 
                     if (isInShapesPhase && otherSetsSelected.Count > 0)
                     {
-                        // Switch to other sets and continue
                         SwitchToOtherSets();
                     }
                     else
                     {
-                        // End game - either shapes with no other sets, OR not in shapes phase
                         Debug.Log("Maximum distance reached! Ending game...");
                         if (focusPoint != null)
                             focusPoint.gameObject.SetActive(false);
@@ -697,10 +593,8 @@ public class GameLogic : MonoBehaviour
         }
         else if (accuracy <= failRate)
         {
-            // Level DOWN - strict zig-zag alternation between size and distance
             if (nextProgressionIsSize)
             {
-                // SIZE's turn: Try to increase size (make shapes bigger/easier)
                 if (shapeScale < 0.04f)
                 {
                     shapeScale = Mathf.Min(0.04f, shapeScale + 0.0036f);
@@ -712,11 +606,10 @@ public class GameLogic : MonoBehaviour
                     Debug.Log("Level DOWN! Size already at maximum, staying at current level");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}L)";
                 }
-                nextProgressionIsSize = false; // Next time it's distance's turn
+                nextProgressionIsSize = false;
             }
             else
             {
-                // DISTANCE's turn: Try to decrease distance
                 if (currentDistanceFromCenter > 1f)
                 {
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
@@ -728,7 +621,7 @@ public class GameLogic : MonoBehaviour
                     Debug.Log("Level DOWN! Distance already at minimum, staying at current level");
                     levelProgression += $" Same(D{(int)currentDistanceFromCenter}S)";
                 }
-                nextProgressionIsSize = true; // Next time it's size's turn
+                nextProgressionIsSize = true; 
             }
         }
         else
@@ -738,7 +631,7 @@ public class GameLogic : MonoBehaviour
         }
     }
 
-    // A method that gets or creates LevelStats instance for given distance and scale
+    //A method that gets or creates LevelStats instance for given distance and scale
     LevelStats GetOrCreateLevelStats(int distance, string sizeLevel)
     {
         string key = distance + "_" + sizeLevel;
@@ -749,6 +642,7 @@ public class GameLogic : MonoBehaviour
         return levelStatistics[key];
     }
 
+    //A method that save game statistics to CSV files and launch GUI application to show results there 
     void LogGameStatistics()
     {
         int totalTrials = totalSimilarPairs + totalNonSimilarPairs;
@@ -764,6 +658,7 @@ public class GameLogic : MonoBehaviour
         Application.Quit();
     }
 
+    //A helper method that saves results to CSV file
     void SaveResultsToCSV(float accuracy, float avgResponseTime, int totalTrials)
     {
         string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
@@ -835,7 +730,7 @@ public class GameLogic : MonoBehaviour
         File.WriteAllText(flagPath, "");
     }
     
-    //a method that launchs the GUI application
+    //a helper method that launchs the GUI application
     void LaunchGUIApplication()
     {
         string guiPath = Path.Combine(Application.dataPath, "..","..", "VisualTraining.exe");

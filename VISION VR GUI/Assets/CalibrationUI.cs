@@ -8,47 +8,42 @@ using UnityEngine.EventSystems;
 
 public class CalibrationUI : MonoBehaviour
 {
-   //UI other Elements 
+   //Main UI Panel Elements
+   public GameObject uiPanel;
    public InputField timeInput; //Duration of the game in minutes
    public InputField shapeDisplayDuration; //Duration of showing the shapes in seconds
    public InputField betweenShapesDuration; //Duration between sets in seconds 
-   public Slider startingDistanceSlider; // starting distance of the shape from the focus point
-   public Text startingDistanceValueText; // Display value of startingDistanceSlider
-   public Slider maxDistanceSlider; // maximum distance can be reached in the game
-   public Text maxDistanceValueText; // Display value of maxDistanceSlider
-   public Slider shapeSizeSlider; // Size of the shapes
-   public Text shapeSizeValueText; // Display value of shapeSizeSlider
-
+   public Slider startingDistanceSlider; //starting distance of the shape from the focus point
+   public Text startingDistanceValueText; //Display value of startingDistanceSlider
+   public Slider maxDistanceSlider; //maximum distance can be reached in the game
+   public Text maxDistanceValueText; //Display value of maxDistanceSlider
+   public Slider shapeSizeSlider; //Size of the shapes
+   public Text shapeSizeValueText; //Display value of shapeSizeSlider
    public Slider focusYSlider; // Focus Point position in Y-axis
    public Text focusYValueText; // Display value of focusYSlider
    public Slider focusScaleSlider; // Focus Point size 
    public Text focusScaleValueText; // Display value of focusScaleSlider
    public Dropdown focusShapeDropdown; //Focus Point Shape (0 = Circle, 1 = Cross)
-   public Dropdown focusChangeDropdown; // Focus point changability (0 = Static, 1 = Fixed interval change, 2 = Random interval change)
-   public Dropdown intervalSetsDropdown; // Number of sets for focus point fixed interval change
-//    public Dropdown focuscolorChangeDropdown; // Color change on/off
-//    public Dropdown focuscolorChoiceDropdown; // Which color to change to
-//    public Dropdown focuscolorDurationDropdown; // Duration of change in seconds
-
-   public InputField successRateInput; // Number of sets should answered True to count as success
+   public Dropdown focusChangeDropdown; //Focus point changability (0 = Static, 1 = Fixed interval change, 2 = Random interval change)
+   public Dropdown intervalSetsDropdown; //Number of sets for focus point fixed interval change
+   public InputField successRateInput; //Number of sets should answered True to count as success
    public InputField failRateInput; // Number of sets should answered False to count as failure
+   public InputField chunkSizeInput; //Chunk size
+   public List<Toggle> imageSetToggles; //ScrollView for image set selection
 
-   public InputField chunkSizeInput; // Chunk size
-
-   public List<Toggle> imageSetToggles; // ScrollView for image set selection
-
-    // Tooltip system
+    //Tool tip variables 
     public GameObject tooltipPanel;
     public Text tooltipText;
     public List<Button> infoButtons = new List<Button>();
     private Button currentInfoButton = null;
 
-   public Button saveConfigButton; // Save configuration button
-   public Button loadConfigButton; // Load configuration button
+    //UI Panel Buttons 
+    public Button saveConfigButton; // Save configuration button
+    public Button loadConfigButton; // Load configuration button
     public Button StartButton;
     public Button UIPreviousButton;
 
-   //Save and load Dialogs
+   //Configurations save and load Dialogs variables
    public GameObject saveDialogPanel;
    public InputField saveConfigNameInput;
    public Button saveDialogSaveButton;
@@ -61,14 +56,13 @@ public class CalibrationUI : MonoBehaviour
    public GameObject configButtonPrefab; // a button prefab
    private string selectedConfigToLoad = "";
 
-   //Message dialog
+   //Message dialog variables 
    public GameObject MessageDialogPanel;
    public Text MessageText;
    public Button MessageOkButton;
 
-   public GameObject uiPanel;
 
-    // User selection panel
+    // User selection panel variables 
     public GameObject userSelectionPanel;
     public InputField userSearchInput;
     public Transform userListScrollContent;
@@ -86,7 +80,8 @@ public class CalibrationUI : MonoBehaviour
     private bool isNewUser = true;
     public Button exitButton;
 
-    //User details panel
+
+    //User details panel variables 
     public GameObject infoPannel;
     public InputField NameInput;
     public InputField IDInput;
@@ -95,7 +90,7 @@ public class CalibrationUI : MonoBehaviour
     public Dropdown DateYearDropDown;
     public Dropdown DateMonthDropDown;
     public Dropdown DateDayDropDown;
-    public Dropdown EyeDropDown; // Right eye = 0, Left eye = 1
+    public Dropdown EyeDropDown; //Right eye = 0, Left eye = 1
     public Button InfoPreviousButton;
    public Button continueButton;
 
@@ -136,45 +131,54 @@ public class CalibrationUI : MonoBehaviour
     private Vector2 expandedPopupOffsetMax = new Vector2(-600, -300);
     private bool isResultsExpanded = false;
 
-    // Results browser
+    // Results browser variables 
     public Button showResultsButton;
     public GameObject resultsListPanel;
     public Transform resultsListScrollContent;
     public Button resultsListCancelButton;
     public Button resultsListRemoveButton;
     public Button resultsListExpandButton;
-
     private List<GameResult> allGameResults = new List<GameResult>();
     private GameObject selectedResultItem = null;
     private int selectedResultIndex = -1;
 
+
     void Start()
     {
-        //sliders text values 
+        //Main UI Panel Listeners
+        //Elements/Options listeners
         startingDistanceSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         startingDistanceSlider.onValueChanged.AddListener(delegate { UpdateMaxDistanceRange(); });
         maxDistanceSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         shapeSizeSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         focusYSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
         focusScaleSlider.onValueChanged.AddListener(delegate { UpdateSliderValueDisplay(); });
+        focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); }); //focus point change
         UpdateSliderValueDisplay(); //initial display
         UpdateMaxDistanceRange();
+        OnFocusChangeDropdownChanged();
+        focusScaleSlider.minValue = 1f;
+        focusScaleSlider.maxValue = 10f;
+        focusScaleSlider.value = 8f;  
 
+        // buttons listeners
         saveConfigButton.onClick.AddListener(ShowSaveDialog);
         loadConfigButton.onClick.AddListener(ShowLoadDialog);
         continueButton.onClick.AddListener(ShowInfoPanel);
+        StartButton.onClick.AddListener(SaveSettingsAndClose);
 
-        //save and load dialogs buttons
+        //save and load dialogs buttons listeners
         saveDialogSaveButton.onClick.AddListener(SaveConfigurationWithName);
         saveDialogCancelButton.onClick.AddListener(HideSaveDialog);
         loadDialogDeleteButton.onClick.AddListener(DeleteSelectedConfiguration);
         loadDialogLoadButton.onClick.AddListener(LoadSelectedConfiguration);
         loadDialogCancelButton.onClick.AddListener(HideLoadDialog);
 
-        //Message dialog
+        //Message dialog listener
         MessageOkButton.onClick.AddListener(() => MessageDialogPanel.SetActive(false));
 
-        //User selection panel buttons
+
+        //User selection panel listeners
         exitButton.onClick.AddListener(ExitApplication);
         userSearchInput.onValueChanged.AddListener(OnSearchTextChanged);
         newUserButton.onClick.AddListener(SelectNewUser);
@@ -185,28 +189,26 @@ public class CalibrationUI : MonoBehaviour
         userSortByIDButton.onClick.AddListener(() => SortUsers("id"));
         userSortByLatestButton.onClick.AddListener(() => SortUsers("latest"));
         userSortByOldestButton.onClick.AddListener(() => SortUsers("oldest"));
+        LoadUsersList();
+        userSelectionNextButton.interactable = false;
 
-        //Start button
-        StartButton.onClick.AddListener(SaveSettingsAndClose);
 
-        //InfoPannel
+        //User Info Panel listeners
+        //Elements listeners
         DateYearDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
         DateMonthDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
         DateDayDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
         UIPreviousButton.onClick.AddListener(ReturnToUIPanel);
-
         InfoPreviousButton.onClick.AddListener(ReturnToUserSelection);
 
-        //Results list buttons
+        //Results list buttons listeners
         showResultsButton.onClick.AddListener(ShowResultsList);
         resultsListCancelButton.onClick.AddListener(HideResultsList);
         resultsListRemoveButton.onClick.AddListener(RemoveSelectedResult);
         resultsListExpandButton.onClick.AddListener(ExpandSelectedResult);
 
-        //Focus point change
-        focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
 
-        // Setup tooltip buttons - add after existing button listeners
+        //Main UI tooltips
         SetupTooltipButton("TimeInputInfoButton", ReverseHebrewText("משך האימון הכולל (בדקות)."));
         SetupTooltipButton("ShapeDurationInputInfoButton", ReverseHebrewText("משך הצגת סט של תמונות (במילישניות)."));
         SetupTooltipButton("BetweenShapeDurationInputInfoButton", ReverseHebrewText("משך ההמתנה בין שני סטים של תמונות (במילישניות)."));
@@ -223,23 +225,10 @@ public class CalibrationUI : MonoBehaviour
         SetupTooltipButton("SuccessRateInputInfoButton", ReverseHebrewText("אחוז התשובות הנכונות הנדרש כדי לעלות רמה."));
         SetupTooltipButton("FailRateInputInfoButton", ReverseHebrewText("אחוז התשובות השגויות שבו יורדים רמה."));
 
-        // Add more as needed...
-
-        LoadUsersList();
-        userSelectionNextButton.interactable = false;
-        
-        OnFocusChangeDropdownChanged();
-        // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
-        // OnFocusColorChangeDropdownChanged();
-
         CheckAndDisplaySessionResults();
-        focusScaleSlider.minValue = 1f;   // מינימום 1%  -> 0.01 גודל במשחק
-        focusScaleSlider.maxValue = 10f;  // מקסימום 30% -> 0.30 גודל במשחק (אפשר לשנות כרצונך)
-        focusScaleSlider.value = 8f;   // ברירת מחדל 8% -> 0.08 גודל במשחק
-
-        UpdateSliderValueDisplay();
     }
 
+    //A function to update the slider value displays
     void UpdateSliderValueDisplay()
     {
         if (startingDistanceValueText != null)
@@ -258,6 +247,8 @@ public class CalibrationUI : MonoBehaviour
             focusScaleValueText.text = focusScaleSlider.value.ToString();
     }
 
+    //A function to update the max distance slider range based on starting distance
+    //Functionality: Goal distance can't be less than starting distance
     void UpdateMaxDistanceRange()
     {
         float startingDist = startingDistanceSlider.value;
@@ -312,14 +303,14 @@ public class CalibrationUI : MonoBehaviour
         settings.maxDistance = maxDistanceSlider.value;
         settings.shapeScale = shapeSizeSlider.value * 0.0036f + 0.004f;
 
-        // Focus point settings
+        //Focus point settings
         settings.focusY = focusYSlider.value / 100f;
         settings.focusScale = focusScaleSlider.value / 100f;
         settings.focusShape = focusShapeDropdown.value;
         settings.focusChangeMode = focusChangeDropdown.value;
         settings.intervalSets = intervalSetsDropdown.value + 1;
 
-        // Success/Fail rates and chunk size
+        //Success/Fail rates and chunk size
         if (float.TryParse(successRateInput.text, out float successRate))
             settings.successRate = successRate;
         else
@@ -335,14 +326,14 @@ public class CalibrationUI : MonoBehaviour
         else
             settings.chunkSize = 15;
 
-        // Image sets selection
+        //Image sets selection
         for (int i = 0; i < imageSetToggles.Count; i++)
         {
             if (imageSetToggles[i].isOn)
                 settings.imageSets.Add(i + 1);
         }
 
-        // Save to config folder
+        //Save to config folder
         string json = JsonUtility.ToJson(settings, true);
         string configFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "Configs");        
         if (!Directory.Exists(configFolder))
@@ -359,7 +350,7 @@ public class CalibrationUI : MonoBehaviour
     //A function that shows the load dialog with the available configurations to load
     void ShowLoadDialog()
     {
-        // Clear previous buttons
+        //Clear previous buttons
         foreach (Transform child in loadDialogContent)
         {
             Destroy(child.gameObject);
@@ -373,7 +364,7 @@ public class CalibrationUI : MonoBehaviour
         
         string[] configFiles = Directory.GetFiles(configFolder, "*.json");
         
-        // Create a button for each config file
+        //Create a button for each config file
         int index = 0;
         foreach (string filePath in configFiles)
         {
@@ -419,7 +410,7 @@ public class CalibrationUI : MonoBehaviour
                 }
                 else
                 {
-                    // When unchecked, return to gray
+                    //When unchecked, return to gray
                     bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f);
                     if (selectedConfigToLoad == capturedName)
                     {
@@ -435,11 +426,12 @@ public class CalibrationUI : MonoBehaviour
         selectedConfigToLoad = "";
     }
 
+    //A function to handle selection of a configuration set in the load dialog
     void SelectConfig(string configName)
     {
         selectedConfigToLoad = configName;
         
-        // Highlight selected and unhighlight others
+        //Highlight selected and unhighlight others
         foreach (Transform child in loadDialogContent)
         {
             Toggle toggle = child.GetComponent<Toggle>();
@@ -449,13 +441,13 @@ public class CalibrationUI : MonoBehaviour
             {
                 if (child.name == configName)
                 {
-                    // Highlight selected
+                    //Highlight selected
                     bgImage.color = new Color(0.3f, 0.6f, 1f, 1f); // Blue highlight
                     toggle.isOn = true;
                 }
                 else
                 {
-                    // Unhighlight others
+                    //Unhighlight others
                     bgImage.color = new Color(0.9f, 0.9f, 0.9f, 1f); // Gray
                     toggle.isOn = false;
                 }
@@ -463,11 +455,13 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function that hides the load configuration dialog
     void HideLoadDialog()
     {
         loadDialogPanel.SetActive(false);
     }
 
+    //A function that handles loading the selected configuration
     void LoadSelectedConfiguration()
     {
         if (string.IsNullOrEmpty(selectedConfigToLoad))
@@ -483,12 +477,12 @@ public class CalibrationUI : MonoBehaviour
             string json = File.ReadAllText(path);
             VRSettings settings = JsonUtility.FromJson<VRSettings>(json);
             
-            // Load durations
+            //Load durations
             timeInput.text = (settings.gameDuration / 60f).ToString();
             betweenShapesDuration.text = settings.betweenShapesDuration.ToString();
             shapeDisplayDuration.text = settings.shapeDisplayDuration.ToString();
             
-            // Load sliders
+            //Load sliders
             startingDistanceSlider.value = settings.startingDistance;
             maxDistanceSlider.value = settings.maxDistance;
             UpdateMaxDistanceRange();
@@ -496,17 +490,17 @@ public class CalibrationUI : MonoBehaviour
             focusYSlider.value = settings.focusY * 100f;
             focusScaleSlider.value = settings.focusScale * 100f;
             
-            // Load dropdowns
+            //Load dropdowns
             focusShapeDropdown.value = settings.focusShape;
             focusChangeDropdown.value = settings.focusChangeMode;
             intervalSetsDropdown.value = settings.intervalSets - 1;
             
-            // Load success/fail rates and chunk size
+            //Load success/fail rates and chunk size
             successRateInput.text = settings.successRate.ToString();
             failRateInput.text = settings.failRate.ToString();
             chunkSizeInput.text = settings.chunkSize.ToString();
             
-            // Load image sets toggles
+            //Load image sets toggles
             for (int i = 0; i < imageSetToggles.Count; i++)
             {
                 imageSetToggles[i].isOn = false;
@@ -528,6 +522,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function that deletes the configuration set selected to be deleted
     void DeleteSelectedConfiguration()
     {
         if (string.IsNullOrEmpty(selectedConfigToLoad))
@@ -540,11 +535,11 @@ public class CalibrationUI : MonoBehaviour
         
         if (File.Exists(path))
         {
-            // Delete from disk
+            //Delete from disk
             File.Delete(path);
             showMessage(".קחמנ תורדגהה טס");
             
-            // Remove from GUI immediately
+            //Remove from GUI 
             foreach (Transform child in loadDialogContent)
             {
                 if (child.name == selectedConfigToLoad)
@@ -554,7 +549,7 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            // Reposition remaining toggles
+            //Reposition remaining toggles
             int index = 0;
             foreach (Transform child in loadDialogContent)
             {
@@ -566,7 +561,7 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            // Clear selection
+            //Clear selection
             selectedConfigToLoad = "";
         }
         else
@@ -575,6 +570,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function responsible for saving the settings, closing the GUI, and launching the game
    void SaveSettingsAndClose()
    {
         //Check if at least one image set is selected
@@ -637,9 +633,6 @@ public class CalibrationUI : MonoBehaviour
        settings.focusShape = focusShapeDropdown.value;
         settings.focusChangeMode = focusChangeDropdown.value;
         settings.intervalSets = intervalSetsDropdown.value + 1;
-        // settings.focuscolorChangeDropdown = focuscolorChangeDropdown.value == 1;
-        // settings.focuscolorChoiceDropdown = focuscolorChoiceDropdown.value;
-        // settings.focuscolorDurationDropdown = focuscolorDurationDropdown.value + 1;
 
         // Success and Fail definitions
         if (float.TryParse(successRateInput.text, out float successRate))
@@ -657,19 +650,19 @@ public class CalibrationUI : MonoBehaviour
         else
             settings.chunkSize = 15;
 
-        // Image set selection
+        //Image set selection
         for (int i = 0; i < imageSetToggles.Count; i++)
         {
             if (imageSetToggles[i].isOn)
                 settings.imageSets.Add(i + 1);
         }
 
-        // User details
+        //User details
         settings.userID = userID;
         settings.trainingEye = EyeDropDown.value; // 0 = Right, 1 = Left
         settings.sessionTimestamp = timestamp;
 
-        // Saving the settings
+        //Saving the settings
        string json = JsonUtility.ToJson(settings, true);
        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
        if (!Directory.Exists(csvFolder))
@@ -678,10 +671,11 @@ public class CalibrationUI : MonoBehaviour
        File.WriteAllText(path, json);
        
        SaveUserDetailsToCSV(userName, userID, age, GenderDropdown.value, DateYearDropDown.value, DateMonthDropDown.value, DateDayDropDown.value, EyeDropDown.value, timestamp);
-        LaunchGameApplication();
+        LaunchGameApplication(); //Game Launch 
         //Application.Quit();
    }
 
+    //A function to launch the game application
     void LaunchGameApplication()
     {
         string gamePath = Path.Combine(Application.dataPath, "..", "Game", "Game.exe");
@@ -722,18 +716,14 @@ public class CalibrationUI : MonoBehaviour
         uiPanel.SetActive(true);
     }
 
-    // public void OnFocusColorChangeDropdownChanged()
-    // {
-    //     focuscolorChoiceDropdown.interactable = focuscolorChangeDropdown.value == 1;
-    //     focuscolorDurationDropdown.interactable = focuscolorChangeDropdown.value == 1;
-    // }
-
+    //A function to show a message dialog with the given message
     void showMessage(string message)
     {
         MessageText.text = message;
         MessageDialogPanel.SetActive(true);
     }
 
+    //A function to save user details to a CSV file
     void SaveUserDetailsToCSV(string userName, string userID, int userAge, int userGender, int birthYear, int birthMonth, int birthDay, int trainingEye, string timestamp)
     {
         string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
@@ -804,24 +794,25 @@ public class CalibrationUI : MonoBehaviour
     {
         string flagPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData", "show_latest_result.flag");
         
-        // Only show results if flag file exists
+        //Only show results if flag file exists
         if (!File.Exists(flagPath))
             return;
         
-        // Delete flag
+        //Delete flag
         File.Delete(flagPath);
         
-        // Load results from CSV
+        //Load results from CSV
         LoadGameResultsFromCSV();
         
         if (allGameResults.Count == 0)
             return;
         
-        // Set the latest result as selected and expand it
+        //Set the latest result as selected and expand it
         selectedResultIndex = 0;
         ExpandSelectedResult();
     }
 
+    //A function to toggle the expansion of detailed results in the results popup
     void ToggleResultsExpansion(SessionResults results)
     {
         isResultsExpanded = !isResultsExpanded;
@@ -862,6 +853,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
     
+    //A function to display detailed level results in the results popup
     void DisplayLevelResults(SessionResults results)
     {
         if (resultsLevelDetailsContent == null)
@@ -921,6 +913,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to show the results list panel
     void ShowResultsList()
     {
         LoadGameResultsFromCSV();
@@ -943,6 +936,7 @@ public class CalibrationUI : MonoBehaviour
         resultsListPanel.SetActive(false);
     }
 
+    //A function to load game results from the CSV file after game ended
     void LoadGameResultsFromCSV()
     {
         allGameResults.Clear();
@@ -963,7 +957,7 @@ public class CalibrationUI : MonoBehaviour
         {
             string[] fields = lines[i].Split(',');
             
-            if (fields.Length < 24) continue; // Basic validation
+            if (fields.Length < 24) continue; //validation 
             
             GameResult result = new GameResult
             {
@@ -990,7 +984,7 @@ public class CalibrationUI : MonoBehaviour
                 csvLineIndex = i
             };
             
-            // Parse level details (20 levels * 4 fields each = 80 fields)
+            //Parsing level details
             int levelStartIndex = 20;
             for (int j = 0; j < 20; j++)
             {
@@ -1004,7 +998,6 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            // Level progression is the last field
             if (fields.Length > 100)
                 result.levelProgression = fields[fields.Length - 1];
             
@@ -1013,6 +1006,7 @@ public class CalibrationUI : MonoBehaviour
         allGameResults.Sort((a, b) => string.Compare(b.timestamp, a.timestamp)); // sort by timestamp
     }
 
+    //A function to display the loaded results in the scrollable list
     void DisplayResultsInList()
     {
         // Clear previous items
@@ -1023,7 +1017,7 @@ public class CalibrationUI : MonoBehaviour
         
         if (allGameResults.Count == 0)
         {
-            // Show "no results" message
+            //Show "no results" message
             GameObject noDataObj = new GameObject("NoResults");
             noDataObj.transform.SetParent(resultsListScrollContent, false);
             
@@ -1040,13 +1034,13 @@ public class CalibrationUI : MonoBehaviour
             return;
         }
         
-        // Create a result item for each result
+        //creating a result item for each result
         for (int i = 0; i < allGameResults.Count; i++)
         {
             CreateResultItem(allGameResults[i], i);
         }
         
-        // Update content size
+        //updating content size
         RectTransform contentRect = resultsListScrollContent.GetComponent<RectTransform>();
         if (contentRect != null)
         {
@@ -1054,6 +1048,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to create a single result item in the results list
     void CreateResultItem(GameResult result, int index)
     {
         GameObject itemObj = new GameObject("ResultItem_" + index);
@@ -1111,27 +1106,29 @@ public class CalibrationUI : MonoBehaviour
         infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
     }
 
+    //A function called when a result item is clicked in the results list
     void OnResultItemClicked(GameObject itemObj, int index)
     {
-        // Deselect previous item
+        //Deselect previous item
         if (selectedResultItem != null && selectedResultItem != itemObj)
         {
             Image prevBg = selectedResultItem.GetComponent<Image>();
             if (prevBg != null) prevBg.color = new Color(0.95f, 0.95f, 0.95f, 1f);
         }
         
-        // Select current item
+        //Select current item
         selectedResultItem = itemObj;
         selectedResultIndex = index;
         
         Image bg = itemObj.GetComponent<Image>();
         if (bg != null) bg.color = new Color(0.8f, 0.9f, 1f, 1f);
         
-        // Show remove and expand buttons
+        //Show remove and expand buttons
         resultsListRemoveButton.gameObject.SetActive(true);
         resultsListExpandButton.gameObject.SetActive(true);
     }
 
+    //A function to remove the selected result from the CSV file
     void RemoveSelectedResult()
     {
         if (selectedResultIndex < 0 || selectedResultIndex >= allGameResults.Count)
@@ -1149,25 +1146,23 @@ public class CalibrationUI : MonoBehaviour
             return;
         }
         
-        // Read all lines
         List<string> lines = new List<string>(File.ReadAllLines(csvPath));
         
-        // Remove the selected result line
+        //removing the selected result line
         int lineToRemove = allGameResults[selectedResultIndex].csvLineIndex;
         if (lineToRemove < lines.Count)
         {
             lines.RemoveAt(lineToRemove);
             
-            // Write back to file
             File.WriteAllLines(csvPath, lines);
             
             showMessage(".קחמנ טלפה");
             
-            // Refresh the display
+            //refreshing the display
             LoadGameResultsFromCSV();
             DisplayResultsInList();
             
-            // Hide remove and expand buttons
+            //hiding remove and expand buttons
             resultsListRemoveButton.gameObject.SetActive(false);
             resultsListExpandButton.gameObject.SetActive(false);
             
@@ -1176,6 +1171,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to expand and show detailed data of the selected result
     void ExpandSelectedResult()
     {
         if (selectedResultIndex < 0 || selectedResultIndex >= allGameResults.Count)
@@ -1186,14 +1182,12 @@ public class CalibrationUI : MonoBehaviour
         
         GameResult result = allGameResults[selectedResultIndex];
         
-        // Populate the existing resultsPanel with this result's data
         if (resultsPanel == null)
         {
             showMessage(".הרחב חולל ןיא");
             return;
         }
         
-        // Fill in the basic info
         string eyeDisplay = result.eyeTrained == "Right" ? "ןימי" : (result.eyeTrained == "Left" ? "לאמש" : result.eyeTrained);
 
         if (resultsUserIDText != null)
@@ -1246,7 +1240,6 @@ public class CalibrationUI : MonoBehaviour
 
         if (resultsLevelProgressionText != null)
         {
-            // CREATE TEXT IN SCROLLVIEW IF IT DOESN'T EXIST
             if (resultsLevelProgressionScrollText == null && resultsLevelProgressionScrollView != null)
             {
                 Transform viewport = resultsLevelProgressionScrollView.transform.Find("Viewport");
@@ -1255,15 +1248,12 @@ public class CalibrationUI : MonoBehaviour
                     Transform content = viewport.Find("Content");
                     if (content != null)
                     {
-                        // Make Content VERY WIDE so it can scroll horizontally
                         RectTransform contentRT = content.GetComponent<RectTransform>();
                         contentRT.sizeDelta = new Vector2(3000, contentRT.sizeDelta.y);
                         contentRT.pivot = new Vector2(1f, 0.5f);
                         contentRT.anchorMin = new Vector2(1f, 0f);
                         contentRT.anchorMax = new Vector2(1f, 1f);
-                        // contentRT.anchoredPosition = Vector2.zero;
                         
-                        // Create Text GameObject
                         GameObject textObj = new GameObject("ProgressionScrollText");
                         textObj.transform.SetParent(content, false);
                         
@@ -1286,7 +1276,6 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            // PARSE AND TRANSFORM PROGRESSION
             float startDist = float.Parse(result.startingDistance);
             float startScale = float.Parse(result.startingShapeScale);
             
@@ -1343,26 +1332,19 @@ public class CalibrationUI : MonoBehaviour
                 }
             }
             
-            // IF MORE THAN 100 STEPS: USE SCROLLVIEW
             if (progressionSteps.Length > 4)
             {
-                // Show only label in the normal text field
                 resultsLevelProgressionText.text = "<b>:םיבלשב תומדקתה</b>";
                 
-                // Show content in scrollview
                 resultsLevelProgressionScrollView.SetActive(true);
                 if (resultsLevelProgressionScrollText != null)
                 {
                     resultsLevelProgressionScrollText.text = transformedProgression;
                 }
             }
-            // IF 10 OR LESS: USE NORMAL TEXT
             else
             {
-                // Show everything in normal text field
-                resultsLevelProgressionText.text = transformedProgression + " <b>:םיבלשב תומדקתה</b>";
-                
-                // Hide scrollview
+                resultsLevelProgressionText.text = transformedProgression + " <b>:םיבלשב תומדקתה</b>";                
                 resultsLevelProgressionScrollView.SetActive(false);
             }
         }
@@ -1379,21 +1361,21 @@ public class CalibrationUI : MonoBehaviour
         if (resultsCorrectResponsesText != null)
             resultsCorrectResponsesText.text = result.overallCorrectResponses + " <b>:תונוכנ תובוגת כהס</b>";
         
-        // Setup close button
+        //Setup close button
         if (resultsCloseButton != null)
         {
             resultsCloseButton.onClick.RemoveAllListeners();
             resultsCloseButton.onClick.AddListener(() => resultsPanel.SetActive(false));
         }
         
-        // Setup expand button for level details
+        //Setup expand button for level details
         if (resultsExpandButton != null)
         {
             resultsExpandButton.onClick.RemoveAllListeners();
             resultsExpandButton.onClick.AddListener(() => ToggleExpandedResultView(result));
         }
         
-        // Reset expansion state
+        //Reset expansion state
         isResultsExpanded = false;
         RectTransform popupRect = resultsPanel.GetComponent<RectTransform>();
         if (popupRect != null)
@@ -1410,10 +1392,11 @@ public class CalibrationUI : MonoBehaviour
         if (resultsExpandButtonText != null)
             resultsExpandButtonText.text = "בחרה";
         
-        // Hide the results list and show the details panel
+        //Hide the results list and show the details panel
         resultsPanel.SetActive(true);
     }
 
+    //A function to toggle the expanded view of level details in the results popup
     void ToggleExpandedResultView(GameResult result)
     {
         isResultsExpanded = !isResultsExpanded;
@@ -1449,11 +1432,12 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to display expanded level details in the results popup
     void DisplayExpandedLevelDetails(GameResult result)
     {
         if (resultsLevelDetailsContent == null) return;
         
-        // Clear previous
+        //Clear previous
         foreach (Transform child in resultsLevelDetailsContent)
         {
             Destroy(child.gameObject);
@@ -1510,9 +1494,10 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to load existing users from the CSV file and display them in the user selection panel
     void LoadUsersList()
     {
-        // Clear previous items
+        //Clear previous items
         foreach (Transform child in userListScrollContent)
         {
             Destroy(child.gameObject);
@@ -1526,7 +1511,7 @@ public class CalibrationUI : MonoBehaviour
         
         string[] lines = File.ReadAllLines(csvPath);
         
-        // Skip header, read data rows
+        //data rows reading
         for (int i = 1; i < lines.Length; i++)
         {
             string[] fields = lines[i].Split(',');
@@ -1539,6 +1524,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to create a single user item in the user selection list
     void CreateUserListItem(string userID, string userName, int index)
     {
         GameObject itemObj = new GameObject("UserItem_" + userID);
@@ -1576,32 +1562,34 @@ public class CalibrationUI : MonoBehaviour
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
     }
 
+    //A function called when an existing user item is clicked
     void SelectExistingUser(string userID, GameObject itemObj)
     {
         selectedUserID = userID;
         isNewUser = false;
         
-        // Highlight selected user
+        //Highlight selected user
         foreach (Transform child in userListScrollContent)
         {
             Image bg = child.GetComponent<Image>();
             if (bg != null)
             {
                 if (child.gameObject == itemObj)
-                    bg.color = new Color(0.3f, 0.6f, 1f, 1f); // Blue highlight
+                    bg.color = new Color(0.3f, 0.6f, 1f, 1f); //Blue highlight
                 else
-                    bg.color = new Color(0.95f, 0.95f, 0.95f, 1f); // Gray
+                    bg.color = new Color(0.95f, 0.95f, 0.95f, 1f); //Gray
             }
         }
         userSelectionNextButton.interactable = true;
     }
 
+    //A function called when "New User" button is clicked
     void SelectNewUser()
     {
         selectedUserID = "";
         isNewUser = true;
         
-        // Clear all fields for new user
+        //Clear all fields for new user in info panel
         NameInput.text = "";
         IDInput.text = "";
         AgeInput.text = "";
@@ -1611,11 +1599,12 @@ public class CalibrationUI : MonoBehaviour
         DateDayDropDown.value = 0;
         EyeDropDown.value = 0;
         
-        // Go directly to info panel
+        //Go directly to info panel
         userSelectionPanel.SetActive(false);
         infoPannel.SetActive(true);
     }
 
+    //A function to delete the selected user from the CSV files
     void DeleteSelectedUser()
     {
         if (string.IsNullOrEmpty(selectedUserID))
@@ -1626,7 +1615,7 @@ public class CalibrationUI : MonoBehaviour
         
         string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
         
-        // Delete from user_details.csv
+        //Delete its row from user_details.csv
         string userDetailsPath = Path.Combine(csvFolder, "user_details.csv");
         if (File.Exists(userDetailsPath))
         {
@@ -1635,14 +1624,13 @@ public class CalibrationUI : MonoBehaviour
             File.WriteAllLines(userDetailsPath, lines);
         }
         
-        // Delete from game_results.csv
+        //Deleting all entries for the selected user from game_results.csv
         string gameResultsPath = Path.Combine(csvFolder, "game_results.csv");
         if (File.Exists(gameResultsPath))
         {
             List<string> lines = new List<string>(File.ReadAllLines(gameResultsPath));
-            // Keep header and remove all lines with this userID
             List<string> filteredLines = new List<string>();
-            filteredLines.Add(lines[0]); // Keep header
+            filteredLines.Add(lines[0]);
             for (int i = 1; i < lines.Count; i++)
             {
                 if (!lines[i].StartsWith(selectedUserID + ","))
@@ -1661,11 +1649,12 @@ public class CalibrationUI : MonoBehaviour
         LoadUsersList();
     }
 
+    //A function to move to the user info panel
     void MoveToInfoPanel()
     {
         if (isNewUser)
         {
-            // Clear all fields for new user
+            //Clear all fields for new user
             NameInput.text = "";
             IDInput.text = "";
             AgeInput.text = "";
@@ -1690,6 +1679,7 @@ public class CalibrationUI : MonoBehaviour
         infoPannel.SetActive(true);
     }
 
+    //A function to load existing user data into the info panel fields
     void LoadUserData(string userID)
     {
         string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
@@ -1716,28 +1706,29 @@ public class CalibrationUI : MonoBehaviour
                     DateMonthDropDown.value = month;
                 if (int.TryParse(fields[6], out int day))
                     DateDayDropDown.value = day;
-                // Don't auto-fill eye - let user choose each time
                 EyeDropDown.value = 0;
                 break;
             }
         }
     }
 
+    //A function called when the search text is changed to filter the users list
     void OnSearchTextChanged(string searchText)
     {
-        if (searchText.Length >= 3)
+        if (searchText.Length >= 3) //filters starts only when 3 or more characters are typed
         {
             FilterUsersList(searchText);
         }
         else if (searchText.Length == 0)
         {
-            LoadUsersList(); // Show all users when search is cleared
+            LoadUsersList(); //Show all users when search is cleared
         }
     }
 
+    //A function to filter the users list based on search text
     void FilterUsersList(string searchText)
     {
-        // Clear previous items
+        //Clear previous items
         foreach (Transform child in userListScrollContent)
         {
             Destroy(child.gameObject);
@@ -1767,11 +1758,14 @@ public class CalibrationUI : MonoBehaviour
             }
         }
     }
+    
+    //A function to toggle the visibility of user sort options panel
     void ToggleUserSortOptions()
     {
         userSortOptionsPanel.SetActive(!userSortOptionsPanel.activeSelf);
     }
 
+    //A function to sort the users list based on selected sort mode
     void SortUsers(string sortMode)
     {
         currentUserSortMode = sortMode;
@@ -1786,7 +1780,7 @@ public class CalibrationUI : MonoBehaviour
         string[] lines = File.ReadAllLines(csvPath);
         List<UserData> users = new List<UserData>();
         
-        // Parse all users
+        //Parse all users
         for (int i = 1; i < lines.Length; i++)
         {
             string[] fields = lines[i].Split(',');
@@ -1799,7 +1793,7 @@ public class CalibrationUI : MonoBehaviour
             });
         }
         
-        // Sort based on mode
+        //Sort based on mode
         if (sortMode == "name")
             users.Sort((a, b) => string.Compare(a.userName, b.userName));
         else if (sortMode == "id")
@@ -1809,7 +1803,7 @@ public class CalibrationUI : MonoBehaviour
         else if (sortMode == "oldest")
             users.Sort((a, b) => string.Compare(a.lastUpdate, b.lastUpdate)); // Ascending
         
-        // Clear and rebuild list
+        //Clear and rebuild list
         foreach (Transform child in userListScrollContent)
         {
             Destroy(child.gameObject);
@@ -1821,6 +1815,7 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to show tooltip panel with given message near the specified button position
     void ShowTooltip(string message, Vector3 buttonPosition)
     {
         if (tooltipPanel != null && tooltipText != null)
@@ -1828,12 +1823,13 @@ public class CalibrationUI : MonoBehaviour
             tooltipText.text = message;
             tooltipPanel.SetActive(true);
             
-            // Position tooltip near the button
+            //Position tooltip near the button
             RectTransform tooltipRect = tooltipPanel.GetComponent<RectTransform>();
-            tooltipRect.position = buttonPosition + new Vector3(-295, -65, 0); // Offset to the right
+            tooltipRect.position = buttonPosition + new Vector3(-295, -65, 0);
         }
     }
 
+    //A function to hide the tooltip panel
     void HideTooltip()
     {
         if (tooltipPanel != null)
@@ -1843,9 +1839,9 @@ public class CalibrationUI : MonoBehaviour
         currentInfoButton = null;
     }
 
+    //A function to setup a tooltip button with given name and tooltip message
     void SetupTooltipButton(string buttonName, string tooltipMessage)
     {
-        // Use FindObjectsOfType with includeInactive parameter (Unity 2020.1+)
         Button[] allButtons = Resources.FindObjectsOfTypeAll<Button>();
         Button btn = null;
         
@@ -1869,12 +1865,13 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function to update the tooltip and handle clicks outside to close it
     void Update()
     {
-        // Close tooltip when clicking outside
+        //Close tooltip when clicking outside
         if (tooltipPanel != null && tooltipPanel.activeSelf && Input.GetMouseButtonDown(0))
         {
-            // Check if click was outside tooltip and info buttons
+            //Check if click was outside tooltip and info buttons
             if (!RectTransformUtility.RectangleContainsScreenPoint(
                 tooltipPanel.GetComponent<RectTransform>(), 
                 Input.mousePosition))
@@ -1899,32 +1896,35 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    //A function called when an info button is clicked to show/hide tooltip
     void OnInfoButtonClick(Button button, string tooltipMessage)
     {
         if (currentInfoButton == button)
         {
-            // Clicking same button again - hide tooltip
+            //Clicking same button again - hide tooltip
             HideTooltip();
         }
         else
         {
-            // Show new tooltip
+            //Show new tooltip
             currentInfoButton = button;
             ShowTooltip(tooltipMessage, button.transform.position);
         }
     }
 
+    //A function to exit the application
     void ExitApplication()
     {
         Application.Quit();
     }
 
+    //A function to reverse Hebrew text
     string ReverseHebrewText(string text)
     {
         if (string.IsNullOrEmpty(text))
             return text;
         
-        // Check if text contains Hebrew characters
+        //Check if text contains Hebrew characters
         bool hasHebrew = false;
         foreach (char c in text)
         {
@@ -1935,7 +1935,7 @@ public class CalibrationUI : MonoBehaviour
             }
         }
         
-        // If no Hebrew, return as-is
+        //if no Hebrew, return as-is
         if (!hasHebrew)
             return text;
         
@@ -1943,28 +1943,28 @@ public class CalibrationUI : MonoBehaviour
         System.Array.Reverse(charArray);
         string reversed = new string(charArray);
         
-        // Swap parentheses back to their original positions
-        reversed = reversed.Replace(')', '\u0001'); // Temporary placeholder
+        //Swap parentheses back to their original positions, they should not be reversed
+        reversed = reversed.Replace(')', '\u0001'); 
         reversed = reversed.Replace('(', ')');
         reversed = reversed.Replace('\u0001', '(');
         
         return reversed;
     }
 
+    //A function to calculate age automatically when date of birth is inserted
     void CalculateAndDisplayAge()
     {
-        // Get selected dropdown indices
         int yearIndex = DateYearDropDown.value;
         int monthIndex = DateMonthDropDown.value;
         int dayIndex = DateDayDropDown.value;
         
-        // Validate that all fields are set (assuming 0 means not set/default)
+        //Validation that all fields are inserted
         if (yearIndex == 0 || monthIndex == 0 || dayIndex == 0)
             return;
         
         try
         {
-            // Get actual values from dropdown options
+            //Getting values from dropdowns
             string yearText = DateYearDropDown.options[yearIndex].text;
             string monthText = DateMonthDropDown.options[monthIndex].text;
             string dayText = DateDayDropDown.options[dayIndex].text;
@@ -1973,20 +1973,19 @@ public class CalibrationUI : MonoBehaviour
             int month = int.Parse(monthText);
             int day = int.Parse(dayText);
             
-            // Create birth date
+            //creating the date
             System.DateTime birthDate = new System.DateTime(year, month, day);
             System.DateTime today = System.DateTime.Today;
             
-            // Calculate age in years with decimal
+            //calculating age
             double ageInDays = (today - birthDate).TotalDays;
-            double age = ageInDays / 365.25; // Account for leap years
+            double age = ageInDays / 365.25;
             
-            // Display with 1 decimal point
+            //Display age with 1 decimal place
             AgeInput.text = age.ToString("F1");
         }
         catch (System.Exception)
         {
-            // Invalid date combination (like Feb 30) or parsing error
             AgeInput.text = "";
         }
     }
@@ -2012,13 +2011,10 @@ public class VRSettings
     public int chunkSize = 15;
 
     public List<int> imageSets = new List<int>();
-    // public bool focuscolorChangeDropdown;
-    // public int focuscolorChoiceDropdown;
-    // public int focuscolorDurationDropdown;
 
     //User details
     public string userID;
-    public int trainingEye; // 0 = Right eye, 1 = Left eye
+    public int trainingEye; 
     public string sessionTimestamp;
 }
 
@@ -2070,7 +2066,6 @@ public class GameResult
     public string overallTrials;
     public string overallCorrectResponses;
     
-    // Level details (20 levels: D1L, D1S, D2L... D10S)
     public List<string> levelAccuracies = new List<string>();
     public List<string> levelAvgResponseTimes = new List<string>();
     public List<string> levelTrials = new List<string>();
@@ -2078,7 +2073,7 @@ public class GameResult
     
     public string levelProgression;
     
-    public int csvLineIndex; // To track which line in CSV this represents
+    public int csvLineIndex;
 }
 
 [System.Serializable]
