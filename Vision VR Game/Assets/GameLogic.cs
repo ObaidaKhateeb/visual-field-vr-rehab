@@ -22,7 +22,7 @@ public class GameLogic : MonoBehaviour
     private List<List<GameObject>> activeImageSets = new List<List<GameObject>>();
 
     public float shapeDistance = 2f; //Distance from camera
-    public float sideOffset = 0.28f;  // Left/right separation
+    public float sideOffset = 0.22f;  // Left/right separation
     public float gameDuration = 10f;   //number of rounds
     public float shapeDisplayDuration = 1500f; //Duration of showing shapes
     public float betweenShapesDuration = 1500f; //Duration between showing sets
@@ -52,7 +52,7 @@ public class GameLogic : MonoBehaviour
     private int currentChunkTotal = 0;
     private float currentDistanceFromCenter = 1f; //Current distance from center (1-10)
     private float maxDistanceFromCenter = 10f; // Maximum distance from center
-    private float shapeScale = 0.05f; // Scale of the shapes
+    private float shapeScale = 0.01f; // Scale of the shapes
     private bool nextProgressionIsSize = true;
 
     private bool isShapesSetSelected = false; //track if shapes set has been selected
@@ -444,6 +444,7 @@ public class GameLogic : MonoBehaviour
             countdownText.gameObject.SetActive(true);
             countdownText.text = "םויס";
         }
+        yield return new WaitForSeconds(3f);
         LogGameStatistics();
     }
 
@@ -564,8 +565,16 @@ public class GameLogic : MonoBehaviour
 
         //Position relative to focus point
         Vector3 center = focusPoint.position + focusPoint.forward * shapeDistance;
-        Vector3 rightPos = center + focusPoint.right * (0.7f + currentDistanceFromCenter * sideOffset);
-        Vector3 leftPos = center - focusPoint.right * (0.7f + currentDistanceFromCenter * sideOffset);
+
+        // Screen percentage: level 1 = 15% from center, level 10 = 45% from center
+        float screenPercent = 0.3f + ((currentDistanceFromCenter - 1f) / 9f) * 0.8f;
+
+        Camera mainCamera = cam.GetComponent<Camera>();
+        float halfHeight = shapeDistance * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        float halfWidth = halfHeight * mainCamera.aspect;
+        float horizontalOffset = halfWidth * screenPercent;
+        Vector3 rightPos = center + focusPoint.right * horizontalOffset;
+        Vector3 leftPos = center - focusPoint.right * horizontalOffset;
 
         // Choose a random image set from the active sets
         int setIndex = Random.Range(0, activeImageSets.Count);
@@ -614,98 +623,70 @@ public class GameLogic : MonoBehaviour
     }
 
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+    }
+
     void EvaluateChunk()
     {
         float accuracy = (float)currentChunkCorrect / currentChunkTotal * 100f;
-        
+
         Debug.Log("Chunk completed. Accuracy: " + accuracy.ToString("F1") + "% (" + currentChunkCorrect + "/" + currentChunkTotal + ")");
-        
+
         if (accuracy >= successRate)
         {
-            // Level UP - alternate between size and distance
+            // Level UP - strict zig-zag alternation between size and distance
             if (nextProgressionIsSize)
             {
-                // Try to decrease size (make shapes smaller/harder)
-                if (shapeScale > 0.005f) // Minimum size check (1 * 0.005f)
+                // SIZE's turn: Try to decrease size (make shapes smaller/harder)
+                if (shapeScale > 0.004f)
                 {
-                    shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
-                    Debug.Log("Level UP! Shape size decreased to: " + (shapeScale / 0.005f));
-                    nextProgressionIsSize = false; // Next time change distance
-                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-                }
-                else if (currentDistanceFromCenter < maxDistanceFromCenter)
-                {
-                    // Size at minimum, try distance instead
-                    currentDistanceFromCenter = Mathf.Min(maxDistanceFromCenter, currentDistanceFromCenter + 1f);
-                    Debug.Log("Level UP! Size at minimum, distance increased to: " + currentDistanceFromCenter);
-                    nextProgressionIsSize = false; // Next time still try size first
-                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    shapeScale = Mathf.Max(0.004f, shapeScale - 0.0036f);
+                    Debug.Log("Level UP! Shape size decreased to: " + (shapeScale / 0.0036f));
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}L)";
                 }
                 else
                 {
-                    Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
-                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-
-                    if (isInShapesPhase && otherSetsSelected.Count > 0)
-                    {
-                        // Switch to other sets
-                        SwitchToOtherSets();
-                    }
-                    else if (isInShapesPhase && otherSetsSelected.Count == 0)
-                    {
-                        // End game - shapes phase with no other sets
-                        Debug.Log("Maximum level reached with shapes set and no other sets! Ending game...");
-                        if (focusPoint != null)
-                            focusPoint.gameObject.SetActive(false);
-                        if (countdownText != null)
-                        {
-                            countdownText.gameObject.SetActive(true);
-                            countdownText.text = "!הבר הנכהו - םייתסה קחשמה";
-                        }
-                        LogGameStatistics();
-                        StopAllCoroutines();
-                        return;
-                    }
+                    Debug.Log("Level UP! Size already at minimum, staying at current level");
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}L)";
                 }
+                nextProgressionIsSize = false; // Next time it's distance's turn
             }
             else
             {
-                // Try to increase distance
+                // DISTANCE's turn: Try to increase distance
                 if (currentDistanceFromCenter < maxDistanceFromCenter)
                 {
                     currentDistanceFromCenter = Mathf.Min(maxDistanceFromCenter, currentDistanceFromCenter + 1f);
                     Debug.Log("Level UP! Distance increased to: " + currentDistanceFromCenter);
-                    nextProgressionIsSize = true; // Next time change size
-                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-                }
-                else if (shapeScale > 0.005f)
-                {
-                    // Distance at maximum, try size instead
-                    shapeScale = Mathf.Max(0.005f, shapeScale - 0.005f);
-                    Debug.Log("Level UP! Distance at maximum, size decreased to: " + (shapeScale / 0.005f));
-                    nextProgressionIsSize = true; // Next time still try distance first
-                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Up(D{(int)currentDistanceFromCenter}S)";
+                    nextProgressionIsSize = true; // Next time it's size's turn
                 }
                 else
                 {
-                    Debug.Log("Level UP! Already at maximum difficulty (size=1, distance=10)");
-                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-                    
+                    // Distance at maximum on distance's turn - END GAME or SWITCH
+                    Debug.Log("Level UP! Distance at maximum on distance's turn");
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}S)";
+
                     if (isInShapesPhase && otherSetsSelected.Count > 0)
                     {
-                        // Switch to other sets
+                        // Switch to other sets and continue
                         SwitchToOtherSets();
                     }
-                    else if (isInShapesPhase && otherSetsSelected.Count == 0)
+                    else
                     {
-                        // End game - shapes phase with no other sets
-                        Debug.Log("Maximum level reached with shapes set and no other sets! Ending game...");
+                        // End game - either shapes with no other sets, OR not in shapes phase
+                        Debug.Log("Maximum distance reached! Ending game...");
                         if (focusPoint != null)
                             focusPoint.gameObject.SetActive(false);
                         if (countdownText != null)
                         {
                             countdownText.gameObject.SetActive(true);
-                            countdownText.text = "!הבר הנכהו - םייתסה קחשמה";
+                            countdownText.text = "םויס";
                         }
                         LogGameStatistics();
                         StopAllCoroutines();
@@ -716,54 +697,38 @@ public class GameLogic : MonoBehaviour
         }
         else if (accuracy <= failRate)
         {
-            // Level DOWN - alternate between size and distance (opposite direction)
+            // Level DOWN - strict zig-zag alternation between size and distance
             if (nextProgressionIsSize)
             {
-                // Try to increase size (make shapes bigger/easier)
-                if (shapeScale < 0.05f) // Maximum size check (10 * 0.005f)
+                // SIZE's turn: Try to increase size (make shapes bigger/easier)
+                if (shapeScale < 0.04f)
                 {
-                    shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
-                    Debug.Log("Level DOWN! Shape size increased to: " + (shapeScale / 0.005f));
-                    nextProgressionIsSize = false; // Next time change distance
-                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-                }
-                else if (currentDistanceFromCenter > 1f)
-                {
-                    // Size at maximum, try distance instead
-                    currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
-                    Debug.Log("Level DOWN! Size at maximum, distance decreased to: " + currentDistanceFromCenter);
-                    nextProgressionIsSize = false; // Next time still try size first
-                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    shapeScale = Mathf.Min(0.04f, shapeScale + 0.0036f);
+                    Debug.Log("Level DOWN! Shape size increased to: " + (shapeScale / 0.0036f));
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}L)";
                 }
                 else
                 {
-                    Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
-                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    Debug.Log("Level DOWN! Size already at maximum, staying at current level");
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}L)";
                 }
+                nextProgressionIsSize = false; // Next time it's distance's turn
             }
             else
             {
-                // Try to decrease distance
+                // DISTANCE's turn: Try to decrease distance
                 if (currentDistanceFromCenter > 1f)
                 {
                     currentDistanceFromCenter = Mathf.Max(1f, currentDistanceFromCenter - 1f);
                     Debug.Log("Level DOWN! Distance decreased to: " + currentDistanceFromCenter);
-                    nextProgressionIsSize = true; // Next time change size
-                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
-                }
-                else if (shapeScale < 0.05f)
-                {
-                    // Distance at minimum, try size instead
-                    shapeScale = Mathf.Min(0.05f, shapeScale + 0.005f);
-                    Debug.Log("Level DOWN! Distance at minimum, size increased to: " + (shapeScale / 0.005f));
-                    nextProgressionIsSize = true; // Next time still try distance first
-                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    levelProgression += $" Down(D{(int)currentDistanceFromCenter}S)";
                 }
                 else
                 {
-                    Debug.Log("Level DOWN! Already at minimum difficulty (size=10, distance=1)");
-                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}{(nextProgressionIsSize ? "L" : "S")})";
+                    Debug.Log("Level DOWN! Distance already at minimum, staying at current level");
+                    levelProgression += $" Same(D{(int)currentDistanceFromCenter}S)";
                 }
+                nextProgressionIsSize = true; // Next time it's size's turn
             }
         }
         else
@@ -796,6 +761,7 @@ public class GameLogic : MonoBehaviour
 
         SaveResultsToCSV(overallAccuracy, averageResponseTime, totalTrials);
         LaunchGUIApplication();
+        Application.Quit();
     }
 
     void SaveResultsToCSV(float accuracy, float avgResponseTime, int totalTrials)
@@ -872,8 +838,8 @@ public class GameLogic : MonoBehaviour
     //a method that launchs the GUI application
     void LaunchGUIApplication()
     {
-        string guiPath = Path.Combine(Application.dataPath, "..", "..", "GUI", "Build", "GUI.exe");
-        
+        string guiPath = Path.Combine(Application.dataPath, "..","..", "VisualTraining.exe");
+
         if (File.Exists(guiPath))
         {
             System.Diagnostics.Process.Start(guiPath);

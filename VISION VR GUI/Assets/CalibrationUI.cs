@@ -1,7 +1,10 @@
+
+
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class CalibrationUI : MonoBehaviour
 {
@@ -34,9 +37,16 @@ public class CalibrationUI : MonoBehaviour
 
    public List<Toggle> imageSetToggles; // ScrollView for image set selection
 
+    // Tooltip system
+    public GameObject tooltipPanel;
+    public Text tooltipText;
+    public List<Button> infoButtons = new List<Button>();
+    private Button currentInfoButton = null;
+
    public Button saveConfigButton; // Save configuration button
    public Button loadConfigButton; // Load configuration button
-   public Button continueButton; // Start button, save settings
+    public Button StartButton;
+    public Button UIPreviousButton;
 
    //Save and load Dialogs
    public GameObject saveDialogPanel;
@@ -58,6 +68,24 @@ public class CalibrationUI : MonoBehaviour
 
    public GameObject uiPanel;
 
+    // User selection panel
+    public GameObject userSelectionPanel;
+    public InputField userSearchInput;
+    public Transform userListScrollContent;
+    public Button newUserButton;
+    public Button userSelectionNextButton;
+    public Button userSortButton;
+    public GameObject userSortOptionsPanel;
+    public Button userSortByNameButton;
+    public Button userSortByIDButton;
+    public Button userSortByLatestButton;
+    public Button userSortByOldestButton;
+    public Button userDeleteButton;
+    private string currentUserSortMode = "latest"; //default
+    private string selectedUserID = "";
+    private bool isNewUser = true;
+    public Button exitButton;
+
     //User details panel
     public GameObject infoPannel;
     public InputField NameInput;
@@ -68,8 +96,8 @@ public class CalibrationUI : MonoBehaviour
     public Dropdown DateMonthDropDown;
     public Dropdown DateDayDropDown;
     public Dropdown EyeDropDown; // Right eye = 0, Left eye = 1
-    public Button StartButton;
     public Button InfoPreviousButton;
+   public Button continueButton;
 
     // Results popup
     public GameObject resultsPanel;
@@ -146,11 +174,28 @@ public class CalibrationUI : MonoBehaviour
         //Message dialog
         MessageOkButton.onClick.AddListener(() => MessageDialogPanel.SetActive(false));
 
+        //User selection panel buttons
+        exitButton.onClick.AddListener(ExitApplication);
+        userSearchInput.onValueChanged.AddListener(OnSearchTextChanged);
+        newUserButton.onClick.AddListener(SelectNewUser);
+        userSelectionNextButton.onClick.AddListener(MoveToInfoPanel);
+        userSortButton.onClick.AddListener(ToggleUserSortOptions);
+        userDeleteButton.onClick.AddListener(DeleteSelectedUser);
+        userSortByNameButton.onClick.AddListener(() => SortUsers("name"));
+        userSortByIDButton.onClick.AddListener(() => SortUsers("id"));
+        userSortByLatestButton.onClick.AddListener(() => SortUsers("latest"));
+        userSortByOldestButton.onClick.AddListener(() => SortUsers("oldest"));
+
         //Start button
         StartButton.onClick.AddListener(SaveSettingsAndClose);
 
-        //InfoPannel Previous button
-        InfoPreviousButton.onClick.AddListener(ReturnToUIPanel);
+        //InfoPannel
+        DateYearDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
+        DateMonthDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
+        DateDayDropDown.onValueChanged.AddListener(delegate { CalculateAndDisplayAge(); });
+        UIPreviousButton.onClick.AddListener(ReturnToUIPanel);
+
+        InfoPreviousButton.onClick.AddListener(ReturnToUserSelection);
 
         //Results list buttons
         showResultsButton.onClick.AddListener(ShowResultsList);
@@ -161,11 +206,38 @@ public class CalibrationUI : MonoBehaviour
         //Focus point change
         focusChangeDropdown.onValueChanged.AddListener(delegate { OnFocusChangeDropdownChanged(); });
 
+        // Setup tooltip buttons - add after existing button listeners
+        SetupTooltipButton("TimeInputInfoButton", ReverseHebrewText("משך האימון הכולל (בדקות)."));
+        SetupTooltipButton("ShapeDurationInputInfoButton", ReverseHebrewText("משך הצגת סט של תמונות (במילישניות)."));
+        SetupTooltipButton("BetweenShapeDurationInputInfoButton", ReverseHebrewText("משך ההמתנה בין שני סטים של תמונות (במילישניות)."));
+        SetupTooltipButton("StartingDistanceSliderInfoButton", ReverseHebrewText("המרחק ההתחלתי של התמונות מנקודת המיקוד."));
+        SetupTooltipButton("MaxDistanceSliderInfoButton", ReverseHebrewText("המרחק המרבי מנקודת המיקוד שהתמונות יכולות להגיע אליו."));
+        SetupTooltipButton("ShapeSizeSliderInfoButton", ReverseHebrewText("גודל התמונות ההתחלתי. "));
+        SetupTooltipButton("ImageSetScrollViewInfoButton", ReverseHebrewText("קטגוריות התמונות שיופיעו במהך האימון."));
+        SetupTooltipButton("FocusShapeDropdownInfoButton", ReverseHebrewText("צורת נקודת המיקוד."));
+        SetupTooltipButton("FocusYSliderInfoButton", ReverseHebrewText("גובה נקודת המיקוד."));
+        SetupTooltipButton("FocusScaleSliderInfoButton", ReverseHebrewText("גודל נקודת המיקוד."));
+        SetupTooltipButton("FocusPointLocationChangeDropDownInfoButton", ReverseHebrewText("מצב שינוי מיקום נקודת המיקוד. סטטי, משתנה במרווחים קבועים או אקראיים."));
+        SetupTooltipButton("FocusPointLocationChangeIntervalDropdownInfoButton", ReverseHebrewText("תדירות שינוי נקודת המיקוד (באינטרוולים). רלוונטי במרווחים קבועים."));
+        SetupTooltipButton("chunkSizeInputInfoButton", ReverseHebrewText("מספר הסטים בהם מעריכים את הביצועים לפני החלטה על שינוי ברמה."));
+        SetupTooltipButton("SuccessRateInputInfoButton", ReverseHebrewText("אחוז התשובות הנכונות הנדרש כדי לעלות רמה."));
+        SetupTooltipButton("FailRateInputInfoButton", ReverseHebrewText("אחוז התשובות השגויות שבו יורדים רמה."));
+
+        // Add more as needed...
+
+        LoadUsersList();
+        userSelectionNextButton.interactable = false;
+        
         OnFocusChangeDropdownChanged();
         // focuscolorChangeDropdown.onValueChanged.AddListener(delegate { OnFocusColorChangeDropdownChanged(); });
         // OnFocusColorChangeDropdownChanged();
 
         CheckAndDisplaySessionResults();
+        focusScaleSlider.minValue = 1f;   // מינימום 1%  -> 0.01 גודל במשחק
+        focusScaleSlider.maxValue = 10f;  // מקסימום 30% -> 0.30 גודל במשחק (אפשר לשנות כרצונך)
+        focusScaleSlider.value = 8f;   // ברירת מחדל 8% -> 0.08 גודל במשחק
+
+        UpdateSliderValueDisplay();
     }
 
     void UpdateSliderValueDisplay()
@@ -238,7 +310,7 @@ public class CalibrationUI : MonoBehaviour
             
         settings.startingDistance = startingDistanceSlider.value;
         settings.maxDistance = maxDistanceSlider.value;
-        settings.shapeScale = shapeSizeSlider.value * 0.005f;
+        settings.shapeScale = shapeSizeSlider.value * 0.0036f + 0.004f;
 
         // Focus point settings
         settings.focusY = focusYSlider.value / 100f;
@@ -420,7 +492,7 @@ public class CalibrationUI : MonoBehaviour
             startingDistanceSlider.value = settings.startingDistance;
             maxDistanceSlider.value = settings.maxDistance;
             UpdateMaxDistanceRange();
-            shapeSizeSlider.value = settings.shapeScale / 0.005f;
+            shapeSizeSlider.value = (settings.shapeScale - 0.004f) / 0.0036f;
             focusYSlider.value = settings.focusY * 100f;
             focusScaleSlider.value = settings.focusScale * 100f;
             
@@ -505,6 +577,23 @@ public class CalibrationUI : MonoBehaviour
 
    void SaveSettingsAndClose()
    {
+        //Check if at least one image set is selected
+        bool anySelected = false;
+        for (int i = 0; i < imageSetToggles.Count; i++)
+        {
+            if (imageSetToggles[i].isOn)
+            {
+                anySelected = true;
+                break;
+            }
+        }
+
+        if (!anySelected)
+        {
+            showMessage(".דחא לפל רוחבל שי - תונומת יטס");
+            return;
+        }
+
         //User details validation
         string userName = NameInput.text.Trim();
         string userID = IDInput.text.Trim();
@@ -540,8 +629,7 @@ public class CalibrationUI : MonoBehaviour
         
         settings.startingDistance = startingDistanceSlider.value;
         settings.maxDistance = maxDistanceSlider.value;
-        settings.shapeScale = shapeSizeSlider.value * 0.005f;
-
+        settings.shapeScale = shapeSizeSlider.value * 0.0036f + 0.004f;
 
         //Focus point settings: location, size, shape, and change mode.
        settings.focusY = focusYSlider.value / 100f;
@@ -590,14 +678,36 @@ public class CalibrationUI : MonoBehaviour
        File.WriteAllText(path, json);
        
        SaveUserDetailsToCSV(userName, userID, age, GenderDropdown.value, DateYearDropDown.value, DateMonthDropDown.value, DateDayDropDown.value, EyeDropDown.value, timestamp);
-       Application.Quit();
+        LaunchGameApplication();
+        //Application.Quit();
    }
 
+    void LaunchGameApplication()
+    {
+        string gamePath = Path.Combine(Application.dataPath, "..", "Game", "Game.exe");
+
+        if (File.Exists(gamePath))
+        {
+            System.Diagnostics.Process.Start(gamePath);
+            Debug.Log("Game application launched");
+        }
+        else
+        {
+            Debug.LogWarning("Game executable not found at: " + gamePath);
+        }
+    }
+
     //A listener function connected to "InfoPreviousButton". It returns to the main UI panel from the info panel
-   void ReturnToUIPanel()
+    void ReturnToUIPanel()
+    {
+        uiPanel.SetActive(false);
+        infoPannel.SetActive(true);
+    }
+
+    void ReturnToUserSelection()
     {
         infoPannel.SetActive(false);
-        uiPanel.SetActive(true);
+        userSelectionPanel.SetActive(true);
     }
 
     public void OnFocusChangeDropdownChanged()
@@ -607,26 +717,9 @@ public class CalibrationUI : MonoBehaviour
 
     void ShowInfoPanel()
     {
-        //Check if at least one image set is selected
-        bool anySelected = false;
-        for (int i = 0; i < imageSetToggles.Count; i++)
-        {
-            if (imageSetToggles[i].isOn)
-            {
-                anySelected = true;
-                break;
-            }
-        }
-
-        if (!anySelected)
-        {
-            showMessage(".דחא לפל רוחבל שי - תונומת יטס");
-            return;
-        }
-
-        //Hide main panel and show info panel
-        uiPanel.SetActive(false);
-        infoPannel.SetActive(true);
+        //Hide info panel and show main UI panel
+        infoPannel.SetActive(false);
+        uiPanel.SetActive(true);
     }
 
     // public void OnFocusColorChangeDropdownChanged()
@@ -831,6 +924,7 @@ public class CalibrationUI : MonoBehaviour
     void ShowResultsList()
     {
         LoadGameResultsFromCSV();
+        allGameResults.RemoveAll(result => result.userID != selectedUserID); // keep only user results
         DisplayResultsInList();
         
         // Show cancel, hide remove and expand
@@ -1416,7 +1510,486 @@ public class CalibrationUI : MonoBehaviour
         }
     }
 
+    void LoadUsersList()
+    {
+        // Clear previous items
+        foreach (Transform child in userListScrollContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "user_details.csv");
+        
+        if (!File.Exists(csvPath))
+            return;
+        
+        string[] lines = File.ReadAllLines(csvPath);
+        
+        // Skip header, read data rows
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] fields = lines[i].Split(',');
+            if (fields.Length < 10) continue;
+            
+            string userID = fields[0];
+            string userName = fields[1];
+            
+            CreateUserListItem(userID, userName, i - 1);
+        }
+    }
 
+    void CreateUserListItem(string userID, string userName, int index)
+    {
+        GameObject itemObj = new GameObject("UserItem_" + userID);
+        itemObj.transform.SetParent(userListScrollContent, false);
+        
+        RectTransform itemRect = itemObj.AddComponent<RectTransform>();
+        itemRect.anchorMin = new Vector2(0, 1);
+        itemRect.anchorMax = new Vector2(1, 1);
+        itemRect.pivot = new Vector2(0.5f, 1);
+        itemRect.sizeDelta = new Vector2(-20, 50);
+        itemRect.anchoredPosition = new Vector2(0, -index * 60);
+        
+        Image bgImage = itemObj.AddComponent<Image>();
+        bgImage.color = new Color(0.95f, 0.95f, 0.95f, 1f);
+        
+        Button itemButton = itemObj.AddComponent<Button>();
+        string capturedID = userID;
+        itemButton.onClick.AddListener(() => SelectExistingUser(capturedID, itemObj));
+        
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(itemObj.transform, false);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.offsetMin = new Vector2(10, 5);
+        textRect.offsetMax = new Vector2(-10, -5);
+        
+        Text text = textObj.AddComponent<Text>();
+        text.text = $"{userID} - ז.ת: {ReverseHebrewText(userName)}";
+        text.color = Color.black;
+        text.fontSize = 16;
+        text.alignment = TextAnchor.MiddleRight;
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+    }
+
+    void SelectExistingUser(string userID, GameObject itemObj)
+    {
+        selectedUserID = userID;
+        isNewUser = false;
+        
+        // Highlight selected user
+        foreach (Transform child in userListScrollContent)
+        {
+            Image bg = child.GetComponent<Image>();
+            if (bg != null)
+            {
+                if (child.gameObject == itemObj)
+                    bg.color = new Color(0.3f, 0.6f, 1f, 1f); // Blue highlight
+                else
+                    bg.color = new Color(0.95f, 0.95f, 0.95f, 1f); // Gray
+            }
+        }
+        userSelectionNextButton.interactable = true;
+    }
+
+    void SelectNewUser()
+    {
+        selectedUserID = "";
+        isNewUser = true;
+        
+        // Clear all fields for new user
+        NameInput.text = "";
+        IDInput.text = "";
+        AgeInput.text = "";
+        GenderDropdown.value = 0;
+        DateYearDropDown.value = 0;
+        DateMonthDropDown.value = 0;
+        DateDayDropDown.value = 0;
+        EyeDropDown.value = 0;
+        
+        // Go directly to info panel
+        userSelectionPanel.SetActive(false);
+        infoPannel.SetActive(true);
+    }
+
+    void DeleteSelectedUser()
+    {
+        if (string.IsNullOrEmpty(selectedUserID))
+        {
+            showMessage(".הקיחמל שמתשמ רוחבל אנ");
+            return;
+        }
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        
+        // Delete from user_details.csv
+        string userDetailsPath = Path.Combine(csvFolder, "user_details.csv");
+        if (File.Exists(userDetailsPath))
+        {
+            List<string> lines = new List<string>(File.ReadAllLines(userDetailsPath));
+            lines.RemoveAll(line => line.StartsWith(selectedUserID + ","));
+            File.WriteAllLines(userDetailsPath, lines);
+        }
+        
+        // Delete from game_results.csv
+        string gameResultsPath = Path.Combine(csvFolder, "game_results.csv");
+        if (File.Exists(gameResultsPath))
+        {
+            List<string> lines = new List<string>(File.ReadAllLines(gameResultsPath));
+            // Keep header and remove all lines with this userID
+            List<string> filteredLines = new List<string>();
+            filteredLines.Add(lines[0]); // Keep header
+            for (int i = 1; i < lines.Count; i++)
+            {
+                if (!lines[i].StartsWith(selectedUserID + ","))
+                {
+                    filteredLines.Add(lines[i]);
+                }
+            }
+            File.WriteAllLines(gameResultsPath, filteredLines);
+        }
+        
+        showMessage(".קחמנ שמתשמה");
+        
+        // Clear selection and refresh list
+        selectedUserID = "";
+        userSelectionNextButton.interactable = false;
+        LoadUsersList();
+    }
+
+    void MoveToInfoPanel()
+    {
+        if (isNewUser)
+        {
+            // Clear all fields for new user
+            NameInput.text = "";
+            IDInput.text = "";
+            AgeInput.text = "";
+            GenderDropdown.value = 0;
+            DateYearDropDown.value = 0;
+            DateMonthDropDown.value = 0;
+            DateDayDropDown.value = 0;
+            EyeDropDown.value = 0;
+        }
+        else
+        {
+            // Load existing user data
+            if (string.IsNullOrEmpty(selectedUserID))
+            {
+                showMessage(".שמתשמ רוחבל אנ");
+                return;
+            }
+            LoadUserData(selectedUserID);
+        }
+        
+        userSelectionPanel.SetActive(false);
+        infoPannel.SetActive(true);
+    }
+
+    void LoadUserData(string userID)
+    {
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "user_details.csv");
+        
+        if (!File.Exists(csvPath))
+            return;
+        
+        string[] lines = File.ReadAllLines(csvPath);
+        
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] fields = lines[i].Split(',');
+            if (fields.Length >= 10 && fields[0] == userID)
+            {
+                IDInput.text = fields[0];
+                NameInput.text = fields[1];
+                AgeInput.text = fields[2] == "N/A" ? "" : fields[2];
+                GenderDropdown.value = fields[3] == "Male" ? 0 : 1;
+                
+                if (int.TryParse(fields[4], out int year))
+                    DateYearDropDown.value = year;
+                if (int.TryParse(fields[5], out int month))
+                    DateMonthDropDown.value = month;
+                if (int.TryParse(fields[6], out int day))
+                    DateDayDropDown.value = day;
+                // Don't auto-fill eye - let user choose each time
+                EyeDropDown.value = 0;
+                break;
+            }
+        }
+    }
+
+    void OnSearchTextChanged(string searchText)
+    {
+        if (searchText.Length >= 3)
+        {
+            FilterUsersList(searchText);
+        }
+        else if (searchText.Length == 0)
+        {
+            LoadUsersList(); // Show all users when search is cleared
+        }
+    }
+
+    void FilterUsersList(string searchText)
+    {
+        // Clear previous items
+        foreach (Transform child in userListScrollContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "user_details.csv");
+        
+        if (!File.Exists(csvPath))
+            return;
+        
+        string[] lines = File.ReadAllLines(csvPath);
+        
+        int displayIndex = 0;
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] fields = lines[i].Split(',');
+            if (fields.Length < 10) continue;
+            
+            string userID = fields[0];
+            string userName = fields[1];
+            
+            if (userName.ToLower().Contains(searchText.ToLower()))
+            {
+                CreateUserListItem(userID, userName, displayIndex);
+                displayIndex++;
+            }
+        }
+    }
+    void ToggleUserSortOptions()
+    {
+        userSortOptionsPanel.SetActive(!userSortOptionsPanel.activeSelf);
+    }
+
+    void SortUsers(string sortMode)
+    {
+        currentUserSortMode = sortMode;
+        userSortOptionsPanel.SetActive(false);
+        
+        string csvFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "VRUserData");
+        string csvPath = Path.Combine(csvFolder, "user_details.csv");
+        
+        if (!File.Exists(csvPath))
+            return;
+        
+        string[] lines = File.ReadAllLines(csvPath);
+        List<UserData> users = new List<UserData>();
+        
+        // Parse all users
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] fields = lines[i].Split(',');
+            if (fields.Length < 10) continue;
+            
+            users.Add(new UserData {
+                userID = fields[0],
+                userName = fields[1],
+                lastUpdate = fields[9]
+            });
+        }
+        
+        // Sort based on mode
+        if (sortMode == "name")
+            users.Sort((a, b) => string.Compare(a.userName, b.userName));
+        else if (sortMode == "id")
+            users.Sort((a, b) => string.Compare(a.userID, b.userID));
+        else if (sortMode == "latest")
+            users.Sort((a, b) => string.Compare(b.lastUpdate, a.lastUpdate)); // Descending
+        else if (sortMode == "oldest")
+            users.Sort((a, b) => string.Compare(a.lastUpdate, b.lastUpdate)); // Ascending
+        
+        // Clear and rebuild list
+        foreach (Transform child in userListScrollContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        for (int i = 0; i < users.Count; i++)
+        {
+            CreateUserListItem(users[i].userID, users[i].userName, i);
+        }
+    }
+
+    void ShowTooltip(string message, Vector3 buttonPosition)
+    {
+        if (tooltipPanel != null && tooltipText != null)
+        {
+            tooltipText.text = message;
+            tooltipPanel.SetActive(true);
+            
+            // Position tooltip near the button
+            RectTransform tooltipRect = tooltipPanel.GetComponent<RectTransform>();
+            tooltipRect.position = buttonPosition + new Vector3(-295, -65, 0); // Offset to the right
+        }
+    }
+
+    void HideTooltip()
+    {
+        if (tooltipPanel != null)
+        {
+            tooltipPanel.SetActive(false);
+        }
+        currentInfoButton = null;
+    }
+
+    void SetupTooltipButton(string buttonName, string tooltipMessage)
+    {
+        // Use FindObjectsOfType with includeInactive parameter (Unity 2020.1+)
+        Button[] allButtons = Resources.FindObjectsOfTypeAll<Button>();
+        Button btn = null;
+        
+        foreach (Button button in allButtons)
+        {
+            if (button.gameObject.name == buttonName)
+            {
+                btn = button;
+                break;
+            }
+        }
+        
+        if (btn != null)
+        {
+            btn.onClick.AddListener(() => OnInfoButtonClick(btn, tooltipMessage));
+            infoButtons.Add(btn);
+        }
+        else
+        {
+            Debug.LogWarning("Tooltip button not found: " + buttonName);
+        }
+    }
+
+    void Update()
+    {
+        // Close tooltip when clicking outside
+        if (tooltipPanel != null && tooltipPanel.activeSelf && Input.GetMouseButtonDown(0))
+        {
+            // Check if click was outside tooltip and info buttons
+            if (!RectTransformUtility.RectangleContainsScreenPoint(
+                tooltipPanel.GetComponent<RectTransform>(), 
+                Input.mousePosition))
+            {
+                bool clickedInfoButton = false;
+                foreach (Button btn in infoButtons)
+                {
+                    if (btn != null && RectTransformUtility.RectangleContainsScreenPoint(
+                        btn.GetComponent<RectTransform>(), 
+                        Input.mousePosition))
+                    {
+                        clickedInfoButton = true;
+                        break;
+                    }
+                }
+                
+                if (!clickedInfoButton)
+                {
+                    HideTooltip();
+                }
+            }
+        }
+    }
+
+    void OnInfoButtonClick(Button button, string tooltipMessage)
+    {
+        if (currentInfoButton == button)
+        {
+            // Clicking same button again - hide tooltip
+            HideTooltip();
+        }
+        else
+        {
+            // Show new tooltip
+            currentInfoButton = button;
+            ShowTooltip(tooltipMessage, button.transform.position);
+        }
+    }
+
+    void ExitApplication()
+    {
+        Application.Quit();
+    }
+
+    string ReverseHebrewText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+        
+        // Check if text contains Hebrew characters
+        bool hasHebrew = false;
+        foreach (char c in text)
+        {
+            if (c >= 0x0590 && c <= 0x05FF)
+            {
+                hasHebrew = true;
+                break;
+            }
+        }
+        
+        // If no Hebrew, return as-is
+        if (!hasHebrew)
+            return text;
+        
+        char[] charArray = text.ToCharArray();
+        System.Array.Reverse(charArray);
+        string reversed = new string(charArray);
+        
+        // Swap parentheses back to their original positions
+        reversed = reversed.Replace(')', '\u0001'); // Temporary placeholder
+        reversed = reversed.Replace('(', ')');
+        reversed = reversed.Replace('\u0001', '(');
+        
+        return reversed;
+    }
+
+    void CalculateAndDisplayAge()
+    {
+        // Get selected dropdown indices
+        int yearIndex = DateYearDropDown.value;
+        int monthIndex = DateMonthDropDown.value;
+        int dayIndex = DateDayDropDown.value;
+        
+        // Validate that all fields are set (assuming 0 means not set/default)
+        if (yearIndex == 0 || monthIndex == 0 || dayIndex == 0)
+            return;
+        
+        try
+        {
+            // Get actual values from dropdown options
+            string yearText = DateYearDropDown.options[yearIndex].text;
+            string monthText = DateMonthDropDown.options[monthIndex].text;
+            string dayText = DateDayDropDown.options[dayIndex].text;
+            
+            int year = int.Parse(yearText);
+            int month = int.Parse(monthText);
+            int day = int.Parse(dayText);
+            
+            // Create birth date
+            System.DateTime birthDate = new System.DateTime(year, month, day);
+            System.DateTime today = System.DateTime.Today;
+            
+            // Calculate age in years with decimal
+            double ageInDays = (today - birthDate).TotalDays;
+            double age = ageInDays / 365.25; // Account for leap years
+            
+            // Display with 1 decimal point
+            AgeInput.text = age.ToString("F1");
+        }
+        catch (System.Exception)
+        {
+            // Invalid date combination (like Feb 30) or parsing error
+            AgeInput.text = "";
+        }
+    }
 
 }
 
@@ -1433,7 +2006,7 @@ public class VRSettings
     public int intervalSets;
     public float startingDistance = 1f;
     public float maxDistance = 10f;
-    public float shapeScale = 0.05f;
+    public float shapeScale = 0.04f;
     public float successRate = 80f;
     public float failRate = 20f;
     public int chunkSize = 15;
@@ -1506,4 +2079,12 @@ public class GameResult
     public string levelProgression;
     
     public int csvLineIndex; // To track which line in CSV this represents
+}
+
+[System.Serializable]
+public class UserData
+{
+    public string userID;
+    public string userName;
+    public string lastUpdate;
 }

@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638972707960000000
-    m_Hash: 3180279914
+      ticks: 638969908820000000
+    m_Hash: 2767520260
   m_LockFileStatus:
     m_FilePath: /Users/haifa/Documents/GitHub/visual-field-vr-rehab/Vision VR Game/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638972707960000000
-    m_Hash: 4070646085
+      ticks: 638969908820000000
+    m_Hash: 3266081567
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:
@@ -127,6 +127,8 @@ m_ResolvedPackages:
     - 2.9.2
     - 2.9.3
     - 2.10.0
+    - 2.10.1
+    - 2.10.2
     compatible:
     - 2.7.1
     - 2.8.1
@@ -135,6 +137,8 @@ m_ResolvedPackages:
     - 2.9.2
     - 2.9.3
     - 2.10.0
+    - 2.10.1
+    - 2.10.2
     recommended: 2.7.1
     deprecated: []
   dependencies: []
@@ -3078,11 +3082,13 @@ m_ResolvedPackages:
     - 2.1.10
     - 2.1.11
     - 2.1.12
+    - 2.1.13
     - 3.0.0
     compatible:
     - 2.1.12
+    - 2.1.13
     - 3.0.0
-    recommended: 2.1.12
+    recommended: 2.1.13
     deprecated: []
   dependencies:
   - name: com.unity.modules.vr

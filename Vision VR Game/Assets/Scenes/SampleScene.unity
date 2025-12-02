@@ -735,9 +735,30 @@ MonoBehaviour:
   - {fileID: 1412202381071052590, guid: ec0f9266873c446f6a8118142c2ab639, type: 3}
   - {fileID: 5516796391777566125, guid: 1ad6fd69a5cab4b9193bb8f55dcb5861, type: 3}
   - {fileID: 8235760462509151719, guid: 38bdf77ce03b54971b0676839f511296, type: 3}
+  imageSet11:
+  - {fileID: 6076295418176771796, guid: bfbfc642a6ecf44579de0cf3108a09c5, type: 3}
+  - {fileID: 1078347557518462229, guid: ca84178c2a7ff42aa86db74a7c1d4b78, type: 3}
+  - {fileID: 1078347557518462229, guid: fe9d42603b11f4590a4e612d2050de40, type: 3}
+  - {fileID: 1078347557518462229, guid: 3bda5f9734ce64f9490312d60ba5d4b5, type: 3}
+  - {fileID: 1078347557518462229, guid: d53cf4b41b73e4e7b875a639f6a9bbe2, type: 3}
+  - {fileID: 1078347557518462229, guid: 74c201390314742fdb49e486d09db54b, type: 3}
+  - {fileID: 1078347557518462229, guid: 6b9459d2f23794f52b856cb68eae375b, type: 3}
+  - {fileID: 1078347557518462229, guid: 8180354609b5b4ec4b3075c15975e758, type: 3}
+  - {fileID: 1078347557518462229, guid: 5eee3054979934116a9abb17e10c05c7, type: 3}
+  - {fileID: 1078347557518462229, guid: 275c9033d3036403e8544ce712d56eaa, type: 3}
+  - {fileID: 1078347557518462229, guid: 35d5fd7611ff144378abcfdd71eaeaad, type: 3}
+  - {fileID: 6076295418176771796, guid: 8344d8962bef745f282ba3a201014752, type: 3}
+  - {fileID: 6076295418176771796, guid: 4c7d72b3075b54f5b862e22abf14abaa, type: 3}
+  - {fileID: 6076295418176771796, guid: 68dddfcf7e1a346ceb3d0fdc7063182a, type: 3}
+  - {fileID: 6076295418176771796, guid: 34583f9df69504f178879edf233f25a9, type: 3}
+  - {fileID: 6076295418176771796, guid: 8915a09f8ec614db3b67841509c6fc07, type: 3}
+  - {fileID: 6076295418176771796, guid: 73067a2a55a5445de8da447c170d9432, type: 3}
+  - {fileID: 6076295418176771796, guid: 85088ed4447104c5fbdf2abecec42ea2, type: 3}
+  - {fileID: 6076295418176771796, guid: 480baea6195674c1f873a39e8e692893, type: 3}
+  - {fileID: 6076295418176771796, guid: 8e8a7a23726f149de9ce4c09b4af0e94, type: 3}
   shapePrefabs: []
   shapeDistance: 2
-  sideOffset: 0.3
+  sideOffset: 0.22
   gameDuration: 10
   shapeDisplayDuration: 1500
   betweenShapesDuration: 1500

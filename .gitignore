@@ -1,0 +1,15 @@
+*/Library/
+*/Temp/
+*/Obj/
+*/Logs/
+*/MemoryCaptures/
+*/Build/
+*/Builds/
+
+# global ignores
+*.csproj
+*.sln
+*.pidb
+*.userprefs
+.DS_Store
+
